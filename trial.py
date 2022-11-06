@@ -10,8 +10,6 @@ from collections import Counter
 import seaborn as sns
 from PyAstronomy import pyasl
 
-#Comment
-
 clusterName = input("Enter a cluster name:")
 clusterNameFile = ("{}.phot".format(clusterName))
 clusterGaiaFile = ("NewCoor/{}_new_coor.dat".format(clusterName))
