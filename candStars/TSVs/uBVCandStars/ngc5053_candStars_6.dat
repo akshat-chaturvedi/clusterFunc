@@ -1,0 +1,4 @@
+# ngc5053 E(B-V)=0.01, m-M = 16.20
+# BlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0
+# 	RA		Dec		(B-V)_0	M_u	M_B	M_V	u	B	V	I	BlueFlag
+1092	13 16 25.196	+17 41 36.61	-0.50	3.86	2.47	2.97	20.1164	18.7384	19.2159	18.5898	0

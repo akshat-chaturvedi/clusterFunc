@@ -1,0 +1,4 @@
+# Pal5 E(B-V)=0.03, m-M = 16.83
+# BlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0
+# 	RA		Dec		(B-V)_0	M_u	M_B	M_V	u	B	V	I	BlueFlag
+3	15 15 58.607	+00 04 26.57	0.54	2.94	2.39	1.85	19.9197	19.3162	18.7639	18.0503	1

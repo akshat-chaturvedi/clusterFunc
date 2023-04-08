@@ -1,0 +1,4 @@
+# M69 E(B-V)=0.18, m-M = 14.72
+# BlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0
+# 	RA		Dec		(B-V)_0	M_u	M_B	M_V	u	B	V	I	BlueFlag
+1661	18 31 08.197	-32 23 07.21	-0.24	2.22	2.18	2.42	17.8885	17.6823	17.7357	17.6013	1

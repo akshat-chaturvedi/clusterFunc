@@ -1,0 +1,4 @@
+# Pal2 E(B-V)=1.24, m-M = 17.17
+# BlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0
+# 	RA		Dec		(B-V)_0	M_u	M_B	M_V	u	B	V	I	BlueFlag
+850	04 46 01.223	+31 27 55.25	-0.13	76.36	-0.99	-0.86	99.9999	21.3187	20.3422	18.9083	1

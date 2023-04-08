@@ -1,0 +1,4 @@
+# M72 E(B-V)=0.05, m-M = 16.15
+# BlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0
+# 	RA		Dec		(B-V)_0	M_u	M_B	M_V	u	B	V	I	BlueFlag
+629	20 53 30.694	-12 31 09.29	0.71	3.61	2.60	1.88	20.0204	18.9247	18.1879	17.3485	1
