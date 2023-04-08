@@ -9,24 +9,87 @@ import pandas as pd
 from collections import Counter
 import seaborn as sns
 from PyAstronomy import pyasl
+from clusterDicts import *
+import time
 
 clusterName = input("Enter a cluster name:")
 clusterNameFile = ("{}.phot".format(clusterName))
 clusterGaiaFile = ("NewCoor/{}_new_coor.dat".format(clusterName))
 clusterGaiaResults = ("{}.csv".format(clusterName))
-dist = float(input("Enter a distance:"))
-ebv = float(input("Enter a E(B-V) value:"))
-raClust = str(input("Enter the RA with spaces:"))
-decClust = str(input("Enter the Dec with spaces:"))
-c = float(input("Enter King-model central concentration value:"))
-r_c = float(input("Enter a core radius in arcminutes:"))
+#clusterNameDict = clusterName.replace()
+#breakpoint()
+#dist = float(input("Enter a distance:"))
+dist = float(locals()[clusterName]['dist'])
+#ebv = float(input("Enter a E(B-V) value:"))
+ebv = float(locals()[clusterName]['ebv'])
+#raClust = str(input("Enter the RA with spaces:"))
+raClust = str(locals()[clusterName]['ra'])
+#decClust = str(input("Enter the Dec with spaces:"))
+decClust = str(locals()[clusterName]['dec'])
+#c = float(input("Enter King-model central concentration value:"))
+c = float(locals()[clusterName]['c'])
+#r_c = float(input("Enter a core radius in arcminutes:"))
+r_c = float(locals()[clusterName]['r_c'])
+
+#breakpoint()
 
 dat = Table.read(clusterNameFile, format="ascii")
 dat2 = Table.read(clusterGaiaFile, format="ascii")
 #print(dat2)
 dat4 = pd.read_csv("GAIAData/{}".format(clusterGaiaResults))
 dat4 = dat4.fillna(1000)
-dat5 = dat4[["pmra","pmdec"]].copy()
+
+ext = "nm"
+
+unID, indexes, inverse, counts = np.unique(dat4[f"{clusterName.lower()}_oid"],
+          return_index=True,
+          return_counts=True,
+          return_inverse=True)
+
+# angSepArray = []
+
+index2 = np.where(counts>1)[0]
+#breakpoint()
+oids = dat4[f"{clusterName.lower()}_oid"][index2]
+oids = np.asarray(oids)
+clusterOids = np.asarray(dat4[f"{clusterName.lower()}_oid"])
+angSep= np.asarray(dat4["ang_sep"])
+parallaxArray= np.asarray(dat4["parallax"])
+angSepUniq, parUniq = angSep[indexes], parallaxArray[indexes]
+
+indexKeep = np.zeros_like(counts)
+
+for i, oid in enumerate(unID):
+    indexi = indexes[i]
+    if counts[i] > 1:
+        angList, indList = [], []
+        for j in range(counts[i]):
+            if parUniq[i+j] > 90:
+                continue
+            else:
+                try:
+                    angList.append(angSepUniq[i+j])
+                    indList.append(indexi+j)
+                except:
+                    pass
+        # breakpoint()
+        if len(angList)==0:
+            indexKeep[i] = indexi
+        else:
+            angList, indList = np.array(angList), np.array(indList)
+            indexKeep[i] = indList[np.argmin(angList)]
+    else:
+        indexKeep[i] = indexi
+
+#breakpoint()
+#dat5 = dat4[["pmra","pmdec"]].copy()
+PMRA = pd.DataFrame(dat4["pmra"][indexKeep])
+PMDEC = pd.DataFrame(dat4["pmdec"][indexKeep])
+oids = pd.DataFrame(dat4[f"{clusterName.lower()}_oid"][indexKeep])
+parallaxGaia = pd.DataFrame(dat4["parallax"][indexKeep])
+parallaxErrorGaia = pd.DataFrame(dat4["parallax_error"][indexKeep])
+dat5 = pd.concat([PMRA,PMDEC,oids,parallaxGaia, parallaxErrorGaia],axis="columns")
+#dat5 = dat4[["pmra","pmdec"]][indexKeep].copy()
 #print(dat4)
 '''
 clusters = DBSCAN(eps=0.7, min_samples=3).fit(dat5)
@@ -63,6 +126,7 @@ def degToRad(theta):
 
 def tidalRadius(c, r_c):
     tidalRad = r_c*(10**c)
+    #tidalRad = r_c*(np.exp(c))
     return tidalRad
 
 def arcMinAngularSep(a1, d1, a2, d2):
@@ -75,9 +139,9 @@ def arcMinAngularSep(a1, d1, a2, d2):
     return angularSep
 
 def parallaxError(dist_kpc):
-    parCluster = 1/(dist_kpc*1000)
-    parStar = dat4["parallax"]
-    parStarErr = dat4["parallax_error"]
+    parCluster = 1/(dist_kpc)
+    parStar = dat5["parallax"]
+    parStarErr = dat5["parallax_error"]
     parDiff = abs(parCluster-parStar)
     return parStarErr, parDiff
 
@@ -89,27 +153,49 @@ def dereddening(uinit,binit,vinit,iinit,ebv,ru,rb,rv,ri,dist_kpc):
     i = iinit - 5*np.log10(dist_kpc*100) - ri*ebv
     return u, b, v, i        
 
+def dereddening1(binit,vinit,ebv,dist_kpc):
+    b = binit - 5*np.log10(dist_kpc*100)
+    v = vinit - 5*np.log10(dist_kpc*100)
+    return b,v
+
 def gethbtop(bv,v):
     cond = v-bv>5
     return bv[cond], v[cond]
 
 #Plots that need fitting
 
-def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c, uRaw, vRaw, bRaw,ebv):
-    clusters = DBSCAN(eps=0.3, min_samples=5).fit(dat5)
-    labels = DBSCAN(eps=0.7, min_samples=3).fit_predict(dat5)
+def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c, uRaw, vRaw, bRaw, iRaw, ebv, flagArray):
+    dat6 = pd.concat([dat5["pmra"],dat5["pmdec"]], axis="columns")
+    clusters = DBSCAN(eps=0.3, min_samples=5).fit(dat6)
+    #clusters = DBSCAN(eps=0.9, min_samples=2).fit(dat5)
+    labels = DBSCAN(eps=0.7, min_samples=3).fit_predict(dat6)
+    #labels = DBSCAN(eps=0.9, min_samples=2).fit_predict(dat5)
     plt.figure(figsize=(8,6))
-    p = sns.scatterplot(data=dat5, x="pmra", y="pmdec", hue=clusters.labels_, legend="brief", palette="deep")
+    #colors = sns.color_palette("husl",3)
+    p = sns.scatterplot(data=dat5, x="pmra", y="pmdec",size=0.01,marker="+" ,hue=clusters.labels_, legend="brief", palette="deep")
+    #breakpoint()
     sns.move_legend(p, "upper center", bbox_to_anchor=(0.15,0.42), fontsize = "x-small", ncol=3, title='Clusters')
     plt.title("Proper Motion Clustering")
-    plt.xlim(-50,50)
-    plt.ylim(-50,50)
-    plt.savefig("DBSCANPlots/%s.png"%(clusterName), bbox_inches="tight",dpi=300)
+    #breakpoint()
+    plt.xlabel("pmra [mas yr$^{-1}$]")
+    plt.ylabel("pmdec [mas yr$^{-1}$]")
+    plt.xlim(-20,15)
+    plt.ylim(-15,15)
+    plt.savefig("DBSCANPlots/%s_%s.png"%(clusterName,ext), bbox_inches="tight",dpi=300)
     #print(dat4.iloc[labels==0,2])
-    ind = dat4[f"{clusterName.lower()}_oid"]-1
+    #indSiegel = dat5[f"{clusterName.lower()}_oid"]
+    indSiegel = dat5[f"{clusterName.lower()}_oid"]-1
+    indSiegel = np.asarray(indSiegel)
     indLab = np.where(labels==0)[0]
-    indSiegel = ind[indLab]
-    indAll = np.intersect1d(indSiegel, cond)
+    ## Plotting for stars not in cluster
+    notInClust = np.where(labels!=0)[0]
+    notInClustSiegel = indSiegel[notInClust]
+    ########################################
+    #indLab = np.arange(len(labels))
+    indSiegelDB = indSiegel[indLab]
+    indAll = np.intersect1d(indSiegelDB, cond)
+##    breakpoint()
+    #indAll = np.arange(len(bv))
 
     clusterCore = coordTransfer(raClust, decClust)
     angSep = arcMinAngularSep(clusterCore[0],clusterCore[1], dat2["col2"],dat2["col3"])
@@ -118,8 +204,13 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     tidalRad = tidalRadius(c,r_c)
     tidalCond = np.where(angSep<tidalRad)[0]
     indAll = np.intersect1d(indAll, tidalCond)
-    indParSiegel = ind[parCond]
+##    breakpoint()
+    #indParSiegel = ind[parCond]
+    indParSiegel = indSiegel[parCond]
     indAll = np.intersect1d(indAll, indParSiegel)
+    #breakpoint()
+
+    distModulus = 5*np.log10(dist*100)
     
     #breakpoint()
     fig, ax = plt.subplots()
@@ -127,38 +218,95 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     #ax.scatter(bvhb,vhb,c='b',s=2)
     xplot = np.linspace(bv[indAll].min(),bv[indAll].max(),len(bv[indAll]))
     #x_array = np.linspace(-0.6,1.3,100)
-    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.2)
+    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,-0.15)
+    #y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
     ax.plot(xplot, y, "r-")
     ax.vlines(x = -0.05, ymin = -4, ymax = 5)
     #ax.plot(xplot,model_f(xplot,*popt),'r--')
-    y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.2)
+    y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,-0.15)
+    #y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
     UVBrightCond = np.logical_and(v[indAll]<y2,bv[indAll]<-0.05)
+
+    #breakpoint()
 
     UVBrightRA = dat2["col2"][indAll][UVBrightCond]
     UVBrightDec = dat2["col3"][indAll][UVBrightCond]
 
+    UVBrightRA1 = dat2["col2"][indAll]
+    UVBrightDec1 = dat2["col3"][indAll]
+
     coordArrayRA = []
     coordArrayDec = []
+    coordArrayRA1 = []
+    coordArrayDec1 = []
+
     for i in range(0,len(UVBrightRA)):
         sexa = pyasl.coordsDegToSexa(UVBrightRA[i],UVBrightDec[i])
+        sexaLen = len(sexa)-1
         coordArrayRA.append(sexa[0:12])
-        coordArrayDec.append(sexa[14:])
-        
+        coordArrayDec.append(sexa[14:sexaLen])
+
+    for i in range(0,len(UVBrightRA1)):
+        sexa = pyasl.coordsDegToSexa(UVBrightRA1[i],UVBrightDec1[i])
+        sexaLen = len(sexa)-1
+        coordArrayRA1.append(sexa[0:12])
+        coordArrayDec1.append(sexa[14:sexaLen])
+
+    coordArrayRA = np.array(coordArrayRA)
+    coordArrayDec = np.array(coordArrayDec)
+    coordArrayRA1 = np.array(coordArrayRA1)
+    coordArrayDec1 = np.array(coordArrayDec1)
+
     #fileArray = np.column_stack((indAll[UVBrightCond],dat2["col2"][indAll][UVBrightCond],dat2["col3"][indAll][UVBrightCond],bv[indAll][UVBrightCond],v[indAll][UVBrightCond]))
     #fileArray1 = np.column_stack((indAll[UVBrightCond],coordArrayRA,coordArrayDec,bv[indAll][UVBrightCond],v[indAll][UVBrightCond]))
     #breakpoint()
-    #infiles = np.savetxt("candStars/%s_candStars.dat"%(clusterName),fileArray, fmt="%d,%.6f,%.6f,%.2f,%.2f", delimiter = ",",header="SiegelIndex,RA,Dec,(B-V)0,Mv")
-    #infiles1 = np.savetxt("candStars/%s_candStars1.dat"%(clusterName),fileArray1, fmt="%s", delimiter = "\t",header="Siegel_Index    RA    Dec    (B-V)_0    M_V")
+    #infiles = np.savetxt("candStars/%s_candStars.dat"%(clusterName,ext),fileArray, fmt="%d,%.6f,%.6f,%.2f,%.2f", delimiter = ",",header="SiegelIndex,RA,Dec,(B-V)0,Mv")
+    #infiles1 = np.savetxt("candStars/%s_candStars1.dat"%(clusterName,ext),fileArray1, fmt="%s", delimiter = "\t",header="Siegel_Index    RA    Dec    (B-V)_0    M_V")
     
     ax.scatter(bv[indAll][UVBrightCond],v[indAll][UVBrightCond],c='g',s=2)
     ax.set_xlim(-0.75,1.6)
     ax.set_ylim(5,-4)
-    ax.set_xlabel('(B$-$V)$_0$', style="italic")
+    #ax.text(1,4.2, "{}\n E(B-V) = {}".format(clusterName,ebv),bbox={'facecolor': 'white','alpha':0.5}, fontsize=10)
+    ax.set_xlabel('($B-V$)$_0$')
+    #ax.set_xlabel('(\textit{$B-V$})$_0$')
     ax.set_ylabel('M$_V$', style="italic")
-    #fig.savefig('Plots/DBSCAN/VBV/VvsBV_%s_DBSCAN.png'%(clusterName),bbox_inches='tight',dpi=300)
-    fig.savefig('Plots/DBSCAN/VBV/VvsBV_%s_DBSCAN.png'%(clusterName),bbox_inches='tight',dpi=300)    
+    #ax.legend(loc="lower right", fontsize = "small")
+    ax.set_title("{} $E(B-V)$={:.2f} $m-M$={:.2f}".format(clusterName,ebv,distModulus))
+    #fig.savefig('Plots/DBSCAN/VBV/VvsBV_%s_DBSCAN.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/DBSCAN/VBV/VvsBV_%s_DBSCAN_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)    
     #breakpoint()
-    
+
+    ##########################################IMPORTANT Non-Member CMDS#####################################################
+    bvRaw = bRaw - vRaw
+    fig, ax = plt.subplots()
+    ax.scatter(bvRaw[notInClustSiegel], vRaw[notInClustSiegel], c='k', s=0.1)
+    ax.set_xlim(-0.75, 1.6)
+    ax.set_ylim(22, 10)
+    ax.set_xlabel('($B-V$)$_0$')
+    ax.set_ylabel('M$_V$', style="italic")
+    ax.set_title("{} $E(B-V)$={:.2f} $m-M$={:.2f}".format(clusterName, ebv, distModulus))
+    # xplot = np.linspace(bvRaw[indAll].min(), bvRaw[indAll].max(), len(bv[indAll]))
+    # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
+    # ax.plot(xplot, y, "r-")
+    ax.vlines(x=0.4, ymin=8, ymax=25, color="orangered", linestyle="--")
+    fig.savefig('Plots/DBSCAN/nonMemberPlots/VBV/VvsBV_%s_NM.png'%(clusterName),bbox_inches='tight',dpi=300)
+
+    fig, ax = plt.subplots()
+    ax.scatter(bvRaw[notInClustSiegel], uRaw[notInClustSiegel], c='k', s=0.1)
+    ax.set_xlim(-0.75, 1.6)
+    ax.set_ylim(22, 10)
+    ax.set_xlabel('($B-V$)$_0$')
+    ax.set_ylabel('M$_u$', style="italic")
+    ax.set_title("{} $E(B-V)$={:.2f} $m-M$={:.2f}".format(clusterName, ebv, distModulus))
+    # xplot = np.linspace(bvRaw[indAll].min(), bvRaw[indAll].max(), len(bv[indAll]))
+    # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
+    # ax.plot(xplot, y, "r-")
+    ax.vlines(x=0.4, ymin=8, ymax=25, color="orangered", linestyle="--")
+    fig.savefig('Plots/DBSCAN/nonMemberPlots/UBV/UvsBV_%s_NM.png'%(clusterName), bbox_inches='tight', dpi=300)
+    ##########################################IMPORTANT Non-Member CMDS#####################################################
+
+
+    '''
     fig, ax = plt.subplots()
     ax.scatter(bv[indAll],b[indAll],c='k',s=0.1)
     #ax.scatter(bvhb,vhb,c='b',s=2)
@@ -175,34 +323,92 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     ax.set_ylim(4,-1.3)
     ax.set_xlabel('B-V')
     ax.set_ylabel('B')
-    fig.savefig('Plots/DBSCAN/BBV/BvsBV_%s_DBSCAN.png'%(clusterName),bbox_inches='tight',dpi=300)
-    
+    fig.savefig('Plots/DBSCAN/BBV/BvsBV_%s_DBSCAN_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
+    '''
+    ##########################################IMPORTANT u-BAND CMDs#####################################################
+
     fig, ax = plt.subplots()
     ax.scatter(bv[indAll],u[indAll],c='k',s=0.1)
     #ax.scatter(bvhb,vhb,c='b',s=2)
     xplot = np.linspace(bv.min(),bv.max(),100001)
     x_array = np.linspace(-0.6,1.3,100)
-    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 2.1)
+    #y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 2.1)
+    xplot = np.linspace(bv[indAll].min(), bv[indAll].max(), len(bv[indAll]))
+    # x_array = np.linspace(-0.6,1.3,100)
+    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65,-0.01)
+    # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
+    ax.plot(xplot, y, "r-")
+    ax.vlines(x=-0.05, ymin=-4, ymax=5)
+    # ax.plot(xplot,model_f(xplot,*popt),'r--')
+    y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65,-0.01)
     #ax.plot(xplot, y, "r-")
     ax.vlines(x = -0.05, ymin = -3, ymax = 4)
     #ax.plot(xplot,model_f(xplot,*popt),'r--')
     #y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 2.1)
     #UVBrightCond = np.logical_and(u[indAll]<y2,bv[indAll]<-0.05)
-    ax.scatter(bv[indAll][UVBrightCond],u[indAll][UVBrightCond],c='g',s=2)
+    UVBrightCond1 = np.logical_and(u[indAll] < y2, bv[indAll] < -0.05)
+    ax.scatter(bv[indAll][UVBrightCond1],u[indAll][UVBrightCond1],c='g',s=2)
+    ax.set_title("{} $E(B-V)$={:.2f} $m-M$={:.2f}".format(clusterName, ebv, distModulus))
     ax.set_xlim(-0.75,1.3)
     ax.set_ylim(5,-4)
-    ax.set_xlabel('B-V')
-    ax.set_ylabel('U')
-    fig.savefig('Plots/DBSCAN/UBV/UvsBV_%s_DBSCAN.png'%(clusterName),bbox_inches='tight',dpi=300)
+    ax.set_xlabel('$B-V$')
+    ax.set_ylabel('$M_u$')
+    fig.savefig('Plots/DBSCAN/UBV/UvsBV_%s_DBSCAN_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
 
+    UVBrightRA2 = dat2["col2"][indAll][UVBrightCond1]
+    UVBrightDec2 = dat2["col3"][indAll][UVBrightCond1]
 
-    fileArray = np.column_stack((indAll[UVBrightCond],dat2["col2"][indAll][UVBrightCond],dat2["col3"][indAll][UVBrightCond],bv[indAll][UVBrightCond],u[indAll][UVBrightCond],b[indAll][UVBrightCond],v[indAll][UVBrightCond],uRaw[indAll][UVBrightCond],bRaw[indAll][UVBrightCond],vRaw[indAll][UVBrightCond]))
-    fileArray1 = np.column_stack((indAll[UVBrightCond],coordArrayRA,coordArrayDec,bv[indAll][UVBrightCond],v[indAll][UVBrightCond]))
-    #breakpoint()
-    infiles = np.savetxt("candStars/%s_candStars.dat"%(clusterName),fileArray, fmt="%d,%.6f,%.6f,%.2f,%.2f,%.2f,%.2f,%.4f,%.4f,%.4f", delimiter = ",",header="SiegelIndex,RA,Dec,(B-V)0,Mu,Mb,Mu,u,b,v,E(B-V)={}".format(ebv))
-    infiles1 = np.savetxt("candStars/%s_candStars1.dat"%(clusterName),fileArray1, fmt="%s", delimiter = "\t",header="Siegel_Index    RA    Dec    (B-V)_0    M_V")
+    coordArrayRA2 = []
+    coordArrayDec2 = []
 
-    
+    for i in range(0, len(UVBrightRA2)):
+        sexa = pyasl.coordsDegToSexa(UVBrightRA2[i], UVBrightDec2[i])
+        sexaLen = len(sexa) - 1
+        coordArrayRA2.append(sexa[0:12])
+        coordArrayDec2.append(sexa[14:sexaLen])
+
+    coordArrayRA2 = np.array(coordArrayRA2)
+    coordArrayDec2 = np.array(coordArrayDec2)
+
+    UVBrightRA3 = dat2["col2"][notInClustSiegel]
+    UVBrightDec3 = dat2["col3"][notInClustSiegel]
+
+    coordArrayRA3 = []
+    coordArrayDec3 = []
+
+    for i in range(0, len(UVBrightRA3)):
+        sexa = pyasl.coordsDegToSexa(UVBrightRA3[i], UVBrightDec3[i])
+        sexaLen = len(sexa) - 1
+        coordArrayRA3.append(sexa[0:12])
+        coordArrayDec3.append(sexa[14:sexaLen])
+
+    coordArrayRA3 = np.array(coordArrayRA3)
+    coordArrayDec3 = np.array(coordArrayDec3)
+    ##########################################IMPORTANT u-BAND CMDs#####################################################
+
+    indexColumn = indAll[UVBrightCond]+1
+    indexColumn2 = indAll[UVBrightCond1]+1
+    indexColumn3 = notInClustSiegel+1
+    indexColumn1 = indAll+1
+    flagArray1 = flagArray[indAll]
+    flagArray2 = flagArray[indAll][UVBrightCond1]
+    flagArray = flagArray[indAll][UVBrightCond]
+    #flagArray3 = flagArray[notInClustSiegel]
+    #fileArray = np.column_stack((indexColumn,dat2["col2"][indAll][UVBrightCond],dat2["col3"][indAll][UVBrightCond],bv[indAll][UVBrightCond],u[indAll][UVBrightCond],b[indAll][UVBrightCond],v[indAll][UVBrightCond],uRaw[indAll][UVBrightCond],bRaw[indAll][UVBrightCond],vRaw[indAll][UVBrightCond],iRaw[indAll][UVBrightCond],flagArray))
+    #fileArray1 = np.column_stack((indexColumn,coordArrayRA,coordArrayDec,bv[indAll][UVBrightCond],u[indAll][UVBrightCond],b[indAll][UVBrightCond],v[indAll][UVBrightCond],uRaw[indAll][UVBrightCond],bRaw[indAll][UVBrightCond],vRaw[indAll][UVBrightCond],iRaw[indAll][UVBrightCond]))
+    fileArray2 = np.rec.fromarrays([indexColumn,coordArrayRA,coordArrayDec,bv[indAll][UVBrightCond],u[indAll][UVBrightCond],b[indAll][UVBrightCond],v[indAll][UVBrightCond],uRaw[indAll][UVBrightCond],bRaw[indAll][UVBrightCond],vRaw[indAll][UVBrightCond],iRaw[indAll][UVBrightCond],flagArray])
+    fileArray2 = np.array(fileArray2)
+    fileArray3 = np.rec.fromarrays([indexColumn1,coordArrayRA1,coordArrayDec1,bv[indAll],u[indAll],b[indAll],v[indAll],uRaw[indAll],bRaw[indAll],vRaw[indAll],iRaw[indAll],flagArray1])
+    fileArray4 = np.rec.fromarrays([indexColumn2,coordArrayRA2,coordArrayDec2,bv[indAll][UVBrightCond1],u[indAll][UVBrightCond1],b[indAll][UVBrightCond1],v[indAll][UVBrightCond1],uRaw[indAll][UVBrightCond1],bRaw[indAll][UVBrightCond1],vRaw[indAll][UVBrightCond1],iRaw[indAll][UVBrightCond1],flagArray2])
+    fileArray4 = np.array(fileArray4)
+    fileArray5 = np.rec.fromarrays([indexColumn3,coordArrayRA3,coordArrayDec3,bv[notInClustSiegel],u[notInClustSiegel],b[notInClustSiegel],v[notInClustSiegel],uRaw[notInClustSiegel],bRaw[notInClustSiegel],vRaw[notInClustSiegel], iRaw[notInClustSiegel]])
+    fileArray5 = np.array(fileArray5)
+    #infiles = np.savetxt("candStars/CSVs/%s_candStars_%s.dat"%(clusterName,ext),fileArray, fmt="%d,%.6f,%.6f,%.2f,%.2f,%.2f,%.2f,%.4f,%.4f,%.4f,%.4f,%i", delimiter = ",",header="#,RA,Dec,(B-V)0,Mu,Mb,Mv,u,B,V,I,BlueFlag,E(B-V)={:.2f}, m-M = {:.2f},BlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0".format(ebv,distModulus))
+    infiles1 = np.savetxt("candStars/TSVs/%s_candStars_%s.dat"%(clusterName,ext),fileArray2, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
+    infiles2 = np.savetxt("clusterMembers/%s_memberStars_%s.dat"%(clusterName,ext),fileArray3, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
+    infiles3 = np.savetxt("candStars/TSVs/uBVCandStars/%s_candStars_%s.dat"%(clusterName,ext),fileArray4, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
+    infiles4 = np.savetxt("nonMembers/%s_nonMembers.dat"%(clusterName),fileArray5, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI".format(clusterName,ebv, distModulus))
+    '''
     fig, ax = plt.subplots()
     ax.scatter(bv[indAll],ub[indAll],c='k',s=0.1)
     ax.vlines(x = -0.05, ymin = -3, ymax = 4)
@@ -210,7 +416,7 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     ax.set_ylim(4,-3)
     ax.set_xlabel('B-V')
     ax.set_ylabel('U-B')
-    fig.savefig('Plots/DBSCAN/UBBV/UBvsBV_%s_DBSCAN.png'%(clusterName),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/DBSCAN/UBBV/UBvsBV_%s_DBSCAN_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
     
     fig, ax = plt.subplots()
     ax.scatter(vi[indAll],ub[indAll],c='k',s=0.1)
@@ -219,7 +425,7 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     ax.set_ylim(4,-3)
     ax.set_xlabel('V-I')
     ax.set_ylabel('U-B')
-    fig.savefig('Plots/DBSCAN/UBVI/UBvsVI_%s_DBSCAN.png'%(clusterName),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/DBSCAN/UBVI/UBvsVI_%s_DBSCAN_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
     
     fig, ax = plt.subplots()
     ax.scatter(vi[indAll],ubbv[indAll],c='k',s=0.1)
@@ -228,23 +434,26 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     ax.set_ylim(4,-3)
     ax.set_xlabel('V-I')
     ax.set_ylabel('(U-B)-(B-V)')
-    fig.savefig('Plots/DBSCAN/UBBVVI/UBBVvsVI_%s_DBSCAN.png'%(clusterName),bbox_inches='tight',dpi=300)
-
-def VBVplotBestFit(bv,v,clusterName):
+    fig.savefig('Plots/DBSCAN/UBBVVI/UBBVvsVI_%s_DBSCAN_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
+    '''
+def VBVplotBestFit(bv,v,clusterName,dist,ebv):
+    distModulus = 5*np.log10(dist*100)
     fig, ax = plt.subplots()
     ax.scatter(bv,v,c='k',s=0.1)
     #ax.scatter(bvhb,vhb,c='b',s=2)
     xplot = np.linspace(bv.min(),bv.max(),100001)
     #x_array = np.linspace(-0.6,1.3,100)
-    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.2)
+    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.2,0)
     ax.plot(xplot, y, "r-")
-    ax.vlines(x = -0.05, ymin = -3, ymax = 4)
+    ax.vlines(x = -0.05, ymin = -4, ymax = 5)
     #ax.plot(xplot,model_f(xplot,*popt),'r--')
-    ax.set_xlim(-0.75,1.3)
-    ax.set_ylim(4,-3)
-    ax.set_xlabel('B-V')
-    ax.set_ylabel('V')
-    fig.savefig('Plots/VBV/VvsBV_%s.png'%(clusterName),bbox_inches='tight',dpi=300)
+    ax.set_xlim(-0.75,1.6)
+    ax.set_ylim(5,-4)
+    ax.set_xlabel('($B-V$)$_0$')
+    ax.set_ylabel('$M_V$')
+    ax.set_title("{} $E(B-V)$={:.2f} $m-M$={:.2f}".format(clusterName,ebv,distModulus))
+    
+    fig.savefig('Plots/VBV/VvsBV_%s_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
 
 def BBVplotBestFit(bv,b,clusterName):
     fig, ax = plt.subplots()
@@ -252,7 +461,7 @@ def BBVplotBestFit(bv,b,clusterName):
     #ax.scatter(bvhb,vhb,c='b',s=2)
     xplot = np.linspace(bv.min(),bv.max(),100001)
     #x_array = np.linspace(-0.6,1.3,100)
-    y = model_f(xplot-0.2, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.2)
+    y = model_f(xplot-0.2, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.2,0)
     ax.plot(xplot, y, "r-")
     ax.vlines(x = -0.05, ymin = -3, ymax = 4)
     #ax.plot(xplot,model_f(xplot,*popt),'r--')
@@ -260,7 +469,7 @@ def BBVplotBestFit(bv,b,clusterName):
     ax.set_ylim(4,-3)
     ax.set_xlabel('B-V')
     ax.set_ylabel('B')
-    fig.savefig('Plots/BBV/BvsBV_%s.png'%(clusterName),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/BBV/BvsBV_%s_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
 
 
 def UBVplotBestFit(bv,u,clusterName):
@@ -269,7 +478,7 @@ def UBVplotBestFit(bv,u,clusterName):
     #ax.scatter(bvhb,vhb,c='b',s=2)
     xplot = np.linspace(bv.min(),bv.max(),100001)
     x_array = np.linspace(-0.6,1.3,100)
-    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 2.1)
+    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 2.1,0)
     ax.plot(xplot, y, "r-")
     ax.vlines(x = -0.05, ymin = -3, ymax = 4)
     #ax.plot(xplot,model_f(xplot,*popt),'r--')
@@ -277,7 +486,7 @@ def UBVplotBestFit(bv,u,clusterName):
     ax.set_ylim(4,-3)
     ax.set_xlabel('B-V')
     ax.set_ylabel('U')
-    fig.savefig('Plots/UBV/UvsBV_%s.png'%(clusterName),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/UBV/UvsBV_%s_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
 
 #Plots that don't need fitting
 
@@ -289,7 +498,7 @@ def UBBVplotBestFit(bv,ub,clusterName):
     ax.set_ylim(4,-3)
     ax.set_xlabel('B-V')
     ax.set_ylabel('U-B')
-    fig.savefig('Plots/UBBV/UBvsBV_%s.png'%(clusterName),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/UBBV/UBvsBV_%s_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
 
 def UBVIplotBestFit(vi,ub,clusterName):
     fig, ax = plt.subplots()
@@ -299,7 +508,7 @@ def UBVIplotBestFit(vi,ub,clusterName):
     ax.set_ylim(4,-3)
     ax.set_xlabel('V-I')
     ax.set_ylabel('U-B')
-    fig.savefig('Plots/UBVI/UBvsVI_%s.png'%(clusterName),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/UBVI/UBvsVI_%s_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
 
 def UBBVVIplotBestFit(vi, ubbv, clusterName):
     fig, ax = plt.subplots()
@@ -309,9 +518,30 @@ def UBBVVIplotBestFit(vi, ubbv, clusterName):
     ax.set_ylim(4,-3)
     ax.set_xlabel('V-I')
     ax.set_ylabel('(U-B)-(B-V)')
-    fig.savefig('Plots/UBBVVI/UBBVvsVI_%s.png'%(clusterName),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/UBBVVI/UBBVvsVI_%s_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
 
-def model_f(x,a,b,c,d,e,f,g):
+def dereddenPlot(bvRAW,vRAW,bv,v,clusterName,dist,ebv):
+    distModulus = 5*np.log10(dist*100)
+    fig, ax = plt.subplots()
+    ax.scatter(bvRAW,vRAW,c='k',s=0.1)
+    ax.scatter(bv,v,c="r",s=0.1)
+    #ax.scatter(bvhb,vhb,c='b',s=2)
+    xplot = np.linspace(bv.min(),bv.max(),100001)
+    #x_array = np.linspace(-0.6,1.3,100)
+    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.2,0)
+    ax.plot(xplot, y, "r-")
+    ax.vlines(x = -0.05, ymin = -4, ymax = 5)
+    #ax.plot(xplot,model_f(xplot,*popt),'r--')
+    #ax.set_xlim(-0.75,1.6)
+    ax.set_ylim(5,-4)
+    ax.set_xlabel('($B-V$)$_0$')
+    ax.set_ylabel('$M_V$')
+    ax.set_title("{} $E(B-V)$={:.2f} $m-M$={:.2f}".format(clusterName,ebv,distModulus))
+    
+    fig.savefig('Plots/deRed/VvsBV_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
+
+def model_f(x,a,b,c,d,e,f,g,k):
+    x=x+k
     return a*x**6+b*x**5+c*x**4+d*x**3+e*x**2+f*x+g
 
 def clusterFunc(dat,ebv,dist,rv=3.164,ru=4.985,rb=4.170, ri = 1.940):
@@ -326,12 +556,14 @@ def clusterFunc(dat,ebv,dist,rv=3.164,ru=4.985,rb=4.170, ri = 1.940):
     dec = dat2['col3']
     # Remove missing magnitudes and bad fits (chi^2 and sharp features also)
     #breakpoint()
-    #cond = np.logical_and.reduce((u<90,b<90,v<90, chi<3, abs(sharp)<0.5))
-    cond = np.logical_and.reduce((b<90,v<90))
+    cond = np.logical_and.reduce((b<60,v<60, chi<3, abs(sharp)<0.5))
+    #cond = np.logical_and.reduce((b<60,v<60))
     ind = np.where(cond)[0]
-    u1, b1, v1, i1 = u[cond], b[cond], v[cond], i[cond]
-    bv1 = b1-v1
-    ra1, dec1 = ra[cond], dec[cond]
+
+##    u1, b1, v1, i1 = u[cond], b[cond], v[cond], i[cond]
+##    bv1 = b1-v1
+##    ra1, dec1 = ra[cond], dec[cond]
+
     # De-redden the cluster
     #u2, b2, v2, i2 = dereddening(u1, b1, v1, i1, ebv, ru, rb, rv, ri, dist)
     u2, b2, v2, i2 = dereddening(u, b, v, i, ebv, ru, rb, rv, ri, dist)
@@ -339,11 +571,20 @@ def clusterFunc(dat,ebv,dist,rv=3.164,ru=4.985,rb=4.170, ri = 1.940):
     vi = v2-i2
     ub = u2-b2
     ubbv = (u2-b2)-(b2-v2)
-    g = v - 0.0124*(b-v)
-    dat1 = Table((g, ra, dec), names=("g","ra","dec"))
+    blueFlagArray = []
+    #breakpoint()
+    for j in range(0,len(bv)):
+        if (vi[j] > 0.331+1.444*bv[j]):
+            blueFlagArray.append(0)
+        else:
+            blueFlagArray.append(1)
+    blueFlagArray = np.array(blueFlagArray)
+    #breakpoint()
+    #g = v - 0.0124*(b-v)
+    #dat1 = Table((g, ra, dec), names=("g","ra","dec"))
     #print(dat1[:][4])
     #dat.add_column(g, name="g_mag")
-    #dat1.write("gData/%s.csv"%(clusterName), format="ascii.csv", overwrite=True)
+    #dat1.write("gData/%s.csv"%(clusterName,ext), format="ascii.csv", overwrite=True)
     '''
     plt.figure()
     plt.scatter(bv,v2, c='k',s=0.1)
@@ -360,21 +601,30 @@ def clusterFunc(dat,ebv,dist,rv=3.164,ru=4.985,rb=4.170, ri = 1.940):
     # Fit the curve of your choosing (in this case, f)
     #popt, pcov = curve_fit(model_f,bvhb,vhb,p0=[-3.74,7.03,6.83,-19.86,8.98,-1.51,0.20])
     # Plot everything!
-    VBVplotBestFit(bv,v2,clusterName)
+    #b3,v3 = dereddening1(bv1,v1,ebv,dist)
+    #bv3 = b3-v3
+    
+    VBVplotBestFit(bv,v2,clusterName,dist,ebv)
     UBVplotBestFit(bv,u2,clusterName)
     UBBVplotBestFit(bv,ub,clusterName)
     UBVIplotBestFit(vi,ub,clusterName)
     UBBVVIplotBestFit(vi,ubbv,clusterName)
     BBVplotBestFit(bv,b2,clusterName)
-    DBSCANPlots(bv,v2,b2,u2,vi,ub,ubbv,clusterName, ind,dist,raClust,decClust,c,r_c,u,v,b,ebv)
+    #breakpoint()
+    DBSCANPlots(bv,v2,b2,u2,vi,ub,ubbv,clusterName, ind,dist,raClust,decClust,c,r_c,u,v,b,i,ebv,blueFlagArray)
+    #dereddenPlot(bv3,v3,bv,v2,clusterName,dist,ebv)
     # You're done for this cluster!
     #print(dat)
 
 def main():
     #ebv_list = np.random.rand()
     #dists = 10*np.random.rand()
+    start = time.time()
     clusterFunc(dat, ebv, dist, rv=3.315,ru=5.231,rb=4.315, ri = 1.940)
+    end = time.time()
+    timeTaken = (end-start)
+    print("Execution time: ", timeTaken)
+
 
 if __name__ == "__main__":
     main()
-    

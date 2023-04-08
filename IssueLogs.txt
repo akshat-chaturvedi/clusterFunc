@@ -1,0 +1,17 @@
+M70 - issue with array minimums
+M72 - no stars?
+ngc5634 - issue with array minimums
+M107 - weird horizontal branch in UBV
+ngc288 - data file sharp values?
+ngc5053 - two stars just redward of the HB model, probable cand stars
+ngc5897 - similar situation
+ngc6352 - strange shape on VvsBV CMD
+ngc6356 - same
+ngc6388 - same
+ngc6535 - issue with array minimums
+ngc6712 - weird shape
+Pal11 - issue with array minimums
+Pal15 - issue with array minimums
+Pyxis - Harris catalogue has no c or r_c values
+
+**NGC6544 onwards almost all have bad shapes!!!**
