@@ -1,8 +1,6 @@
 from astropy.table import Table
 import numpy as np
 nameList = ["RA","Dec","(B-V)_0","M_u","M_B","M_V","u","B","V","I"]
-#dat = Table.read("nonMembers/M79_nonMembers.dat", format="ascii.tab", colnames=nameList)
-
 dat = Table.read("nonMembers/M79_nonMembers.dat", format="ascii.no_header", delimiter="\t", fast_reader=False)
 
 mv = dat['col7']
