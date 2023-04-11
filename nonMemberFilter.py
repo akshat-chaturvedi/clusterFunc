@@ -1,6 +1,5 @@
 from astropy.table import Table
 import numpy as np
-import pandas as pd
 nameList = ["RA","Dec","(B-V)_0","M_u","M_B","M_V","u","B","V","I"]
 #dat = Table.read("nonMembers/M79_nonMembers.dat", format="ascii.tab", colnames=nameList)
 
