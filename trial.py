@@ -39,7 +39,7 @@ dat2 = Table.read(clusterGaiaFile, format="ascii")
 dat4 = pd.read_csv("GAIAData/{}".format(clusterGaiaResults))
 dat4 = dat4.fillna(1000)
 
-ext = "nm"
+ext = "PM"
 
 unID, indexes, inverse, counts = np.unique(dat4[f"{clusterName.lower()}_oid"],
           return_index=True,
@@ -166,6 +166,15 @@ def gethbtop(bv,v):
 
 def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c, uRaw, vRaw, bRaw, iRaw, ebv, flagArray):
     dat6 = pd.concat([dat5["pmra"],dat5["pmdec"]], axis="columns")
+    fig, ax = plt.subplots()
+    ax.scatter(dat6['pmra'], dat6['pmdec'], s = 0.1, marker="x")
+    ax.set_title("Proper Motions")
+    ax.set_xlabel("pmra [mas yr$^{-1}$]")
+    ax.set_ylabel("pmdec [mas yr$^{-1}$]")
+    ax.set_xlim(-20, 15)
+    ax.set_ylim(-15, 15)
+    fig.savefig("PMPlots/%s_%s.png" % (clusterName, ext), bbox_inches="tight", dpi=300)
+
     clusters = DBSCAN(eps=0.3, min_samples=5).fit(dat6)
     #clusters = DBSCAN(eps=0.9, min_samples=2).fit(dat5)
     labels = DBSCAN(eps=0.7, min_samples=3).fit_predict(dat6)
@@ -351,7 +360,7 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     ax.set_title("{} $E(B-V)$={:.2f} $m-M$={:.2f}".format(clusterName, ebv, distModulus))
     ax.set_xlim(-0.75,1.3)
     ax.set_ylim(5,-4)
-    ax.set_xlabel('$B-V$')
+    ax.set_xlabel('($B-V$)$_0$')
     ax.set_ylabel('$M_u$')
     fig.savefig('Plots/DBSCAN/UBV/UvsBV_%s_DBSCAN_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
 
