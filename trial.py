@@ -39,7 +39,7 @@ dat2 = Table.read(clusterGaiaFile, format="ascii")
 dat4 = pd.read_csv("GAIAData/{}".format(clusterGaiaResults))
 dat4 = dat4.fillna(1000)
 
-ext = "didIBreakthis"
+ext = "pm"
 
 unID, indexes, inverse, counts = np.unique(dat4[f"{clusterName.lower()}_oid"],
           return_index=True,
