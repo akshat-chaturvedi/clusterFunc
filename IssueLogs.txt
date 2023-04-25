@@ -15,3 +15,5 @@ Pal15 - issue with array minimums
 Pyxis - Harris catalogue has no c or r_c values
 
 **NGC6544 onwards almost all have bad shapes!!!**
+
+Fixed some issues
