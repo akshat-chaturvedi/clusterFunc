@@ -8,6 +8,7 @@ import glob
 bhArray = []
 starCount = []
 magArray = []
+clusterNameArray = []
 
 for name in glob.glob('candStars/TSVs/uBVCandStars/*_candStars_6.dat'):
     with open(r"%s"%name, 'r') as fp:
@@ -15,6 +16,7 @@ for name in glob.glob('candStars/TSVs/uBVCandStars/*_candStars_6.dat'):
         starCount += [lines]
         fileName = name.split('/')[3]
         clusterName = fileName.split('_')[0]
+        clusterNameArray += [clusterName]
         bhArray += [locals()[clusterName]['bh']]
         magArray += [locals()[clusterName]['mv']]
 
@@ -38,3 +40,6 @@ ax.set_xlabel("B/H Parameter")
 ax.set_ylabel("Normalized number of blue stars")
 ax.set_title("Normalized number of stars as a function of HB morphology")
 fig.savefig("starNormBH.jpg", dpi=300)
+
+fileArray = np.rec.fromarrays((clusterNameArray, starCount, bhArray))
+infiles1 = np.savetxt("clusterStarNumberList.dat", fileArray, fmt="%s\t\t\t%i\t\t\t\t\t\t%.2f", delimiter="\t", header="Cluster Name\tNumber of blue stars\tB/H Value")
