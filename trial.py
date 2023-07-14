@@ -12,6 +12,10 @@ from PyAstronomy import pyasl
 from clusterDicts import *
 import time
 
+#Last updated July 5 2023
+## Explainer: Currently creating CMDs using unprocessed (dereddening), observed mag values. CandStar lists of both UBV
+## and VBV are produced. HEB checking individuals.
+
 clusterName = input("Enter a cluster name:")
 clusterNameFile = ("{}.phot".format(clusterName))
 clusterGaiaFile = ("NewCoor/{}_new_coor.dat".format(clusterName))
@@ -39,7 +43,7 @@ dat2 = Table.read(clusterGaiaFile, format="ascii")
 dat4 = pd.read_csv("GAIAData/{}".format(clusterGaiaResults))
 dat4 = dat4.fillna(1000)
 
-ext = "pm"
+ext = "july"
 
 unID, indexes, inverse, counts = np.unique(dat4[f"{clusterName.lower()}_oid"],
           return_index=True,
@@ -232,11 +236,58 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     ax.plot(xplot, y, "r-")
     ax.vlines(x = -0.05, ymin = -4, ymax = 5)
     #ax.plot(xplot,model_f(xplot,*popt),'r--')
+
+    #HB Model Equation
     y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,-0.15)
+
     #y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
     UVBrightCond = np.logical_and(v[indAll]<y2,bv[indAll]<-0.05)
 
-    #breakpoint()
+    ############RAW STAR MAG CMDS######################
+
+    bvRaw = bRaw - vRaw
+
+    fig, ax = plt.subplots()
+    ax.scatter(bvRaw[indAll], vRaw[indAll], c='k', s=0.1)
+    # ax.scatter(bvhb,vhb,c='b',s=2)
+    xplot = np.linspace(bvRaw[indAll].min(), bvRaw[indAll].max(), len(bvRaw[indAll]))
+    # x_array = np.linspace(-0.6,1.3,100)
+    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
+    # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
+    #ax.plot(xplot, y, "r-")
+    ax.vlines(x=-0.05, ymin=-4, ymax=5)
+    # ax.plot(xplot,model_f(xplot,*popt),'r--')
+    y2 = model_f(bvRaw[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
+    # y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
+    ax.scatter(bvRaw[indAll][UVBrightCond], vRaw[indAll][UVBrightCond], c='g', s=2)
+    ax.set_title("{} $E(B-V)$={:.2f} $m-M$={:.2f}".format(clusterName, ebv, distModulus))
+    ax.set_xlim(-0.75, 1.3)
+    ax.set_ylim(21, 11.5)
+    ax.set_xlabel('$B-V$')
+    ax.set_ylabel('$V$')
+    fig.savefig('Plots/DBSCAN/RAW/VBV/VvsBV_%s_DBSCAN_RAW_%s.png'%(clusterName,ext), bbox_inches='tight', dpi=300)
+
+    fig, ax = plt.subplots()
+    ax.scatter(bvRaw[indAll], uRaw[indAll], c='k', s=0.1)
+    # ax.scatter(bvhb,vhb,c='b',s=2)
+    xplot = np.linspace(bvRaw[indAll].min(), bvRaw[indAll].max(), len(bvRaw[indAll]))
+    # x_array = np.linspace(-0.6,1.3,100)
+    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
+    # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
+    #ax.plot(xplot, y, "r-")
+    ax.vlines(x=-0.05, ymin=-4, ymax=5)
+    # ax.plot(xplot,model_f(xplot,*popt),'r--')
+    y2 = model_f(bvRaw[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
+    # y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
+    ax.scatter(bvRaw[indAll][UVBrightCond], uRaw[indAll][UVBrightCond], c='g', s=2)
+    ax.set_title("{} $E(B-V)$={:.2f} $m-M$={:.2f}".format(clusterName, ebv, distModulus))
+    ax.set_xlim(-0.75, 1.3)
+    ax.set_ylim(21, 13.5)
+    ax.set_xlabel('$B-V$')
+    ax.set_ylabel('$u$')
+    fig.savefig('Plots/DBSCAN/RAW/UBV/UvsBV_%s_DBSCAN_RAW_%s.png' %(clusterName, ext), bbox_inches='tight', dpi=300)
+
+    ############RAW STAR MAG CMDS######################
 
     UVBrightRA = dat2["col2"][indAll][UVBrightCond]
     UVBrightDec = dat2["col3"][indAll][UVBrightCond]
@@ -412,11 +463,17 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     fileArray4 = np.array(fileArray4)
     fileArray5 = np.rec.fromarrays([indexColumn3,coordArrayRA3,coordArrayDec3,bv[notInClustSiegel],u[notInClustSiegel],b[notInClustSiegel],v[notInClustSiegel],uRaw[notInClustSiegel],bRaw[notInClustSiegel],vRaw[notInClustSiegel], iRaw[notInClustSiegel]])
     fileArray5 = np.array(fileArray5)
+
+    candStarMasterList = np.concatenate((fileArray2, fileArray4))
+    candStarMasterList = np.unique(candStarMasterList)
+
     #infiles = np.savetxt("candStars/CSVs/%s_candStars_%s.dat"%(clusterName,ext),fileArray, fmt="%d,%.6f,%.6f,%.2f,%.2f,%.2f,%.2f,%.4f,%.4f,%.4f,%.4f,%i", delimiter = ",",header="#,RA,Dec,(B-V)0,Mu,Mb,Mv,u,B,V,I,BlueFlag,E(B-V)={:.2f}, m-M = {:.2f},BlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0".format(ebv,distModulus))
-    infiles1 = np.savetxt("candStars/TSVs/%s_candStars_%s.dat"%(clusterName,ext),fileArray2, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
+    #infiles1 = np.savetxt("candStars/TSVs/%s_candStars_%s.dat"%(clusterName,ext),fileArray2, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
     infiles2 = np.savetxt("clusterMembers/%s_memberStars_%s.dat"%(clusterName,ext),fileArray3, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
-    infiles3 = np.savetxt("candStars/TSVs/uBVCandStars/%s_candStars_%s.dat"%(clusterName,ext),fileArray4, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
+    #infiles3 = np.savetxt("candStars/TSVs/uBVCandStars/%s_uBVcandStars_%s.dat"%(clusterName,ext),fileArray4, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
     infiles4 = np.savetxt("nonMembers/%s_nonMembers.dat"%(clusterName),fileArray5, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI".format(clusterName,ebv, distModulus))
+    infiles5 = np.savetxt("candStars/candStarMasterList/%s_candStarsMaster_%s.dat"%(clusterName,ext),candStarMasterList, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
+
     '''
     fig, ax = plt.subplots()
     ax.scatter(bv[indAll],ub[indAll],c='k',s=0.1)
