@@ -33,7 +33,7 @@ b = np.intersect1d(starNums1, lst)
 
 # print(b)
 
-clusterName = "M79"
+clusterName = "M80"
 clusterNameFile = ("{}.phot".format(clusterName))
 
 dat = Table.read(clusterNameFile, format="ascii")
@@ -45,8 +45,7 @@ i = dat['col6']
 chi = dat['col12']
 sharp = dat['col13']
 
-ind = np.where(dat['col1'] == 816)[0]
-
+ind = np.where(dat['col1'] == 6422)[0]
 cond = np.logical_or.reduce((b>60,v>60, chi>3, abs(sharp)>0.5))
     #cond = np.logical_and.reduce((b<60,v<60))
 ind = np.where(cond)[0]
@@ -55,6 +54,6 @@ ind = np.where(cond)[0]
 
 dat1 = dat[ind]
 
-moo = np.where(dat1["col1"]==2008)[0]
+moo = np.where(dat1["col1"]==10002)[0]
 
 print(dat1[moo])
