@@ -43,7 +43,7 @@ dat2 = Table.read(clusterGaiaFile, format="ascii")
 dat4 = pd.read_csv("GAIAData/{}".format(clusterGaiaResults))
 dat4 = dat4.fillna(1000)
 
-ext = "july"
+ext = "testing"
 
 unID, indexes, inverse, counts = np.unique(dat4[f"{clusterName.lower()}_oid"],
           return_index=True,
@@ -201,8 +201,8 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     indSiegel = np.asarray(indSiegel)
     indLab = np.where(labels==0)[0]
     ## Plotting for stars not in cluster
-    notInClust = np.where(labels!=0)[0]
-    notInClustSiegel = indSiegel[notInClust]
+    # notInClust = np.where(labels!=0)[0]
+    # notInClustSiegel = indSiegel[notInClust]
     ########################################
     #indLab = np.arange(len(labels))
     indSiegelDB = indSiegel[indLab]
@@ -221,7 +221,18 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     #indParSiegel = ind[parCond]
     indParSiegel = indSiegel[parCond]
     indAll = np.intersect1d(indAll, indParSiegel)
-    #breakpoint()
+
+    ## Plotting for stars not in cluster
+    notInTidalRadCond = np.where(angSep>tidalRad)[0]
+    notInParCond = np.where(parDiff > 3*parStarErr)[0]
+    notInClust = np.where(labels != 0)[0]
+
+    nonMemberCond = np.concatenate((notInTidalRadCond, notInParCond, notInClust))
+    nonMemberCond = np.unique(nonMemberCond)
+
+    notInClustSiegel = np.intersect1d(indSiegel, nonMemberCond)
+    ########################################
+
 
     distModulus = 5*np.log10(dist*100)
     
@@ -471,7 +482,7 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     #infiles1 = np.savetxt("candStars/TSVs/%s_candStars_%s.dat"%(clusterName,ext),fileArray2, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
     infiles2 = np.savetxt("clusterMembers/%s_memberStars_%s.dat"%(clusterName,ext),fileArray3, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
     #infiles3 = np.savetxt("candStars/TSVs/uBVCandStars/%s_uBVcandStars_%s.dat"%(clusterName,ext),fileArray4, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
-    infiles4 = np.savetxt("nonMembers/%s_nonMembers.dat"%(clusterName),fileArray5, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI".format(clusterName,ebv, distModulus))
+    infiles4 = np.savetxt("nonMembers/%s_nonMembers_%s.dat"%(clusterName, ext),fileArray5, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI".format(clusterName,ebv, distModulus))
     infiles5 = np.savetxt("candStars/candStarMasterList/%s_candStarsMaster_%s.dat"%(clusterName,ext),candStarMasterList, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
 
     '''
