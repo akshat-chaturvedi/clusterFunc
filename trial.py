@@ -43,7 +43,7 @@ dat2 = Table.read(clusterGaiaFile, format="ascii")
 dat4 = pd.read_csv("GAIAData/{}".format(clusterGaiaResults))
 dat4 = dat4.fillna(1000)
 
-ext = "testing"
+ext = "july"
 
 unID, indexes, inverse, counts = np.unique(dat4[f"{clusterName.lower()}_oid"],
           return_index=True,
@@ -353,7 +353,6 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     bvRaw = bRaw - vRaw
     fig, ax = plt.subplots()
     ax.scatter(bvRaw[notInClustSiegel], vRaw[notInClustSiegel], c='k', s=0.1)
-    ax.scatter(bvRaw[notInClustSiegel][3684], vRaw[notInClustSiegel][3684], c='orangered', s=5)
     ax.set_xlim(-0.75, 1.6)
     ax.set_ylim(22, 10)
     ax.set_xlabel('($B-V$)$_0$')
@@ -478,8 +477,15 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     fileArray5 = np.rec.fromarrays([indexColumn3,coordArrayRA3,coordArrayDec3,bv[notInClustSiegel],u[notInClustSiegel],b[notInClustSiegel],v[notInClustSiegel],uRaw[notInClustSiegel],bRaw[notInClustSiegel],vRaw[notInClustSiegel], iRaw[notInClustSiegel]])
     fileArray5 = np.array(fileArray5)
 
-    candStarMasterList = np.concatenate((fileArray2, fileArray4))
-    candStarMasterList = np.unique(candStarMasterList)
+    if len(fileArray2) != 0 and len(fileArray4) != 0:
+        candStarMasterList = np.concatenate((fileArray2, fileArray4))
+        candStarMasterList = np.unique(candStarMasterList)
+    elif len(fileArray2) != 0 and len(fileArray4) == 0:
+        candStarMasterList = fileArray2
+    elif len(fileArray2) == 0 and len(fileArray4) != 0:
+        candStarMasterList = fileArray4
+    else:
+        candStarMasterList = np.array([])
 
     #infiles = np.savetxt("candStars/CSVs/%s_candStars_%s.dat"%(clusterName,ext),fileArray, fmt="%d,%.6f,%.6f,%.2f,%.2f,%.2f,%.2f,%.4f,%.4f,%.4f,%.4f,%i", delimiter = ",",header="#,RA,Dec,(B-V)0,Mu,Mb,Mv,u,B,V,I,BlueFlag,E(B-V)={:.2f}, m-M = {:.2f},BlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0".format(ebv,distModulus))
     #infiles1 = np.savetxt("candStars/TSVs/%s_candStars_%s.dat"%(clusterName,ext),fileArray2, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
