@@ -225,6 +225,7 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     ## Plotting for stars not in cluster
     notInTidalRadCond = np.where(angSep>tidalRad)[0]
     notInParCond = np.where(parDiff > 3*parStarErr)[0]
+    notInParCond = indSiegel[notInParCond]
     notInClust = np.where(labels != 0)[0]
 
     nonMemberCond = np.concatenate((notInTidalRadCond, notInParCond, notInClust))
@@ -257,6 +258,7 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     ############RAW STAR MAG CMDS######################
 
     bvRaw = bRaw - vRaw
+
 
     fig, ax = plt.subplots()
     ax.scatter(bvRaw[indAll], vRaw[indAll], c='k', s=0.1)
@@ -351,6 +353,7 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     bvRaw = bRaw - vRaw
     fig, ax = plt.subplots()
     ax.scatter(bvRaw[notInClustSiegel], vRaw[notInClustSiegel], c='k', s=0.1)
+    ax.scatter(bvRaw[notInClustSiegel][3684], vRaw[notInClustSiegel][3684], c='orangered', s=5)
     ax.set_xlim(-0.75, 1.6)
     ax.set_ylim(22, 10)
     ax.set_xlabel('($B-V$)$_0$')
