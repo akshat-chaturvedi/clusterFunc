@@ -59,41 +59,54 @@ moo = np.where(dat1["col1"]==10002)[0]
 
 # print(dat1[moo])
 
-df2 = Table.read("clusterMembers/M14_memberStars_6.dat", format="ascii", delimiter="\s")
-df3 = Table.read("candStars/candStarMasterList/M14_candStarsMaster_testing.dat", format="ascii", delimiter="\s")
+df2 = Table.read("clusterMembers/M80_memberStars_10002.dat", format="ascii", delimiter="\s")
+# df3 = Table.read("candStars/candStarMasterList/M14_candStarsMaster_testing.dat", format="ascii", delimiter="\s")
 # print(df2)
 
 vRaw = df2['col14']
 B = df2['col13']
 bvRaw = B-vRaw
 
-v = df2['col11']
-b = df2['col10']
+v = df2['col10']
+b = df2['col9']
+i = df2['col11']
 bv = b-v
+vi = v-i
 
-vRaw1 = df3['col14']
-B1 = df3['col13']
-bvRaw1 = B1-vRaw1
+# print(df2)
 
-v1 = df3['col11']
-b1 = df3['col10']
-bv1 = b1-v1
+if (vi[1543] > 0.331+1.444*bv[1543]):
+    print(0)
+else:
+    print(1)
+
+
+
+
+# vRaw1 = df3['col14']
+# B1 = df3['col13']
+# bvRaw1 = B1-vRaw1
+#
+# v1 = df3['col11']
+# b1 = df3['col10']
+# bv1 = b1-v1
 
 def model_f(x,a,b,c,d,e,f,g,k):
     x=x+k
     return a*x**6+b*x**5+c*x**4+d*x**3+e*x**2+f*x+g
 
-fig, ax = plt.subplots()
-ax.scatter(bv, v, c='k', s=0.1)
-# ax.scatter(bvhb,vhb,c='b',s=2)
-ax.scatter(bv1, v1, c='orangered', s=5, marker="o")
-xplot = np.linspace(bv1.min(), bv1.max(), len(bv1))
-# -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15
-y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,-0.15)
-ax.plot(bv1, y, color="red", linestyle="--")
-# ax.set_title("{} $E(B-V)$={:.2f} $m-M$={:.2f}".format(clusterName, ebv, distModulus))
-ax.set_xlim(-0.75, 1.3)
-ax.set_ylim(5,-4)
-ax.set_xlabel('$B-V$')
-ax.set_ylabel('$V$')
-plt.show()
+# fig, ax = plt.subplots()
+# ax.scatter(bv, v, c='k', s=0.1)
+# # ax.scatter(bvhb,vhb,c='b',s=2)
+# ax.scatter(bv1, v1, c='orangered', s=5, marker="o")
+# xplot = np.linspace(bv1.min(), bv1.max(), len(bv1))
+# # -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15
+# y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,-0.15)
+# ax.plot(bv1, y, color="red", linestyle="--")
+# # ax.set_title("{} $E(B-V)$={:.2f} $m-M$={:.2f}".format(clusterName, ebv, distModulus))
+# ax.set_xlim(-0.75, 1.3)
+# ax.set_ylim(5,-4)
+# ax.set_xlabel('$B-V$')
+# ax.set_ylabel('$V$')
+# plt.show()
+
