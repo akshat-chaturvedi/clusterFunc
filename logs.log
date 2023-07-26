@@ -2,3 +2,7 @@ INFO (26/07/2023 09:56:29 AM): Run successful, extension: testing123, execution 
 INFO (26/07/2023 09:58:01 AM): Run successful, extension: testing123, execution time: 5.43 (Line: 638 [trial.py])
 INFO (26/07/2023 10:01:26 AM): Run successful, extension: testing123, execution time: 5.40 (Line: 634 [trial.py])
 INFO (26/07/2023 10:08:02 AM): Run successful, extension: testing123, execution time: 4.17 (Line: 587 [trial.py])
+INFO (26/07/2023 04:30:49 PM): Run successful, extension: testing123, execution time: 2.56 (Line: 587 [trial.py])
+INFO (26/07/2023 04:31:25 PM): Run successful, extension: testing, execution time: 2.53 (Line: 587 [trial.py])
+INFO (26/07/2023 04:32:17 PM): Run successful, extension: testing, execution time: 2.54 (Line: 587 [trial.py])
+INFO (26/07/2023 04:33:17 PM): Run successful, extension: testing, execution time: 2.55 (Line: 587 [trial.py])

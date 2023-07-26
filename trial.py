@@ -13,7 +13,7 @@ import logging
 ## Explainer: Currently creating CMDs using unprocessed (dereddening), observed mag values. CandStar lists of both UBV
 ## and VBV are produced. HEB checking individuals.
 
-ext = "testing123"
+ext = "testing"
 
 def coordTransfer(ra, dec):
     raString = ra.split(" ")
@@ -148,8 +148,8 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     distModulus = 5*np.log10(dist*100)
 
     #HB Model Equation
-    y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.2)
-    y_u = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65, 0.8)
+    y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.05)
+    y_u = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65, 0.5)
 
     #y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
     UVBrightCond = np.logical_and(v[indAll]<y2,bv[indAll]<-0.05)
@@ -242,7 +242,7 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     xplot = np.linspace(bv[indAll].min(), bv[indAll].max(), len(bv[indAll]))
     # x_array = np.linspace(-0.6,1.3,100)
     # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
-    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.2)
+    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.05)
     ax.plot(xplot, y, "r-")
     ax.vlines(x=-0.05, ymin=-4, ymax=5)
     # ax.plot(xplot,model_f(xplot,*popt),'r--')
@@ -318,7 +318,7 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     #y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 2.1)
     xplot = np.linspace(bv[indAll].min(), bv[indAll].max(), len(bv[indAll]))
     # x_array = np.linspace(-0.6,1.3,100)
-    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65,0.8)
+    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65,0.5)
     # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
     ax.plot(xplot, y, "r-")
     ax.vlines(x=-0.05, ymin=-4, ymax=5)
