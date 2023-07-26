@@ -146,18 +146,6 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
 
 
     distModulus = 5*np.log10(dist*100)
-    
-    #breakpoint()
-    # fig, ax = plt.subplots()
-    # ax.scatter(bv[indAll],v[indAll],c='k',s=0.1)
-    #ax.scatter(bvhb,vhb,c='b',s=2)
-    # xplot = np.linspace(bv[indAll].min(),bv[indAll].max(),len(bv[indAll]))
-    #x_array = np.linspace(-0.6,1.3,100)
-    # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,-0.15)
-    # #y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
-    # ax.plot(xplot, y, "r-")
-    # ax.vlines(x = -0.05, ymin = -4, ymax = 5)
-    # #ax.plot(xplot,model_f(xplot,*popt),'r--')
 
     #HB Model Equation
     y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.2)
@@ -563,70 +551,35 @@ def clusterFunc(dat,ebv,dist,rv=3.164,ru=4.985,rb=4.170, ri = 1.940):
     ra = dat2['col2']
     dec = dat2['col3']
     # Remove missing magnitudes and bad fits (chi^2 and sharp features also)
-    #breakpoint()
     cond = np.logical_and.reduce((b<60,v<60, chi<3, abs(sharp)<0.5))
     #cond = np.logical_and.reduce((b<60,v<60))
     ind = np.where(cond)[0]
 
-##    u1, b1, v1, i1 = u[cond], b[cond], v[cond], i[cond]
-##    bv1 = b1-v1
-##    ra1, dec1 = ra[cond], dec[cond]
-
     # De-redden the cluster
-    #u2, b2, v2, i2 = dereddening(u1, b1, v1, i1, ebv, ru, rb, rv, ri, dist)
     u2, b2, v2, i2 = dereddening(u, b, v, i, ebv, ru, rb, rv, ri, dist)
     bv = b2-v2 # Define a color
     vi = v2-i2
     ub = u2-b2
     ubbv = (u2-b2)-(b2-v2)
+
     blueFlagArray = []
-    #breakpoint()
     for j in range(0,len(bv)):
         if (vi[j] > 0.331+1.444*bv[j]):
             blueFlagArray.append(0)
         else:
             blueFlagArray.append(1)
     blueFlagArray = np.array(blueFlagArray)
-    #breakpoint()
-    #g = v - 0.0124*(b-v)
-    #dat1 = Table((g, ra, dec), names=("g","ra","dec"))
-    #print(dat1[:][4])
-    #dat.add_column(g, name="g_mag")
-    #dat1.write("gData/%s.csv"%(clusterName,ext), format="ascii.csv", overwrite=True)
-    '''
-    plt.figure()
-    plt.scatter(bv,v2, c='k',s=0.1)
-    x_array = np.linspace(-0.6,1.3,100)
-    y = model_f(x_array, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.2)
-    plt.plot(x_array, y, "r-")
-    plt.ylim(4,-2)
-    plt.xlim(-0.6,1.3)
-    plt.show()
-    '''
-    # Select just the points at the top of the HB
-    #bvhb, vhb = gethbtop(bv,v2)
-    #breakpoint()
-    # Fit the curve of your choosing (in this case, f)
-    #popt, pcov = curve_fit(model_f,bvhb,vhb,p0=[-3.74,7.03,6.83,-19.86,8.98,-1.51,0.20])
-    # Plot everything!
-    #b3,v3 = dereddening1(bv1,v1,ebv,dist)
-    #bv3 = b3-v3
-    
-    VBVplotBestFit(bv,v2,clusterName,dist,ebv)
-    UBVplotBestFit(bv,u2,clusterName)
-    UBBVplotBestFit(bv,ub,clusterName)
-    UBVIplotBestFit(vi,ub,clusterName)
-    UBBVVIplotBestFit(vi,ubbv,clusterName)
-    BBVplotBestFit(bv,b2,clusterName)
-    #breakpoint()
+
+    # VBVplotBestFit(bv,v2,clusterName,dist,ebv)
+    # UBVplotBestFit(bv,u2,clusterName)
+    # UBBVplotBestFit(bv,ub,clusterName)
+    # UBVIplotBestFit(vi,ub,clusterName)
+    # UBBVVIplotBestFit(vi,ubbv,clusterName)
+    # BBVplotBestFit(bv,b2,clusterName)
     DBSCANPlots(bv,v2,b2,u2,vi,ub,ubbv,clusterName, ind,dist,raClust,decClust,c,r_c,u,v,b,i,ebv,blueFlagArray)
-    #dereddenPlot(bv3,v3,bv,v2,clusterName,dist,ebv)
     # You're done for this cluster!
-    #print(dat)
 
 def main():
-    #ebv_list = np.random.rand()
-    #dists = 10*np.random.rand()
     start = time.time()
     clusterFunc(dat, ebv, dist, rv=3.315,ru=5.231,rb=4.315, ri = 1.940)
     end = time.time()
@@ -647,7 +600,6 @@ if __name__ == "__main__":
     clusterGaiaFile = ("NewCoor/{}_new_coor.dat".format(clusterName))
     clusterGaiaResults = ("{}.csv".format(clusterName))
     # clusterNameDict = clusterName.replace()
-    # breakpoint()
     # dist = float(input("Enter a distance:"))
     dist = float(locals()[clusterName]['dist'])
     # ebv = float(input("Enter a E(B-V) value:"))
@@ -661,11 +613,9 @@ if __name__ == "__main__":
     # r_c = float(input("Enter a core radius in arcminutes:"))
     r_c = float(locals()[clusterName]['r_c'])
 
-    # breakpoint()
-
     dat = Table.read(clusterNameFile, format="ascii")
     dat2 = Table.read(clusterGaiaFile, format="ascii")
-    # print(dat2)
+
     dat4 = pd.read_csv("GAIAData/{}".format(clusterGaiaResults))
     dat4 = dat4.fillna(1000)
 
@@ -674,10 +624,7 @@ if __name__ == "__main__":
                                                return_counts=True,
                                                return_inverse=True)
 
-    # angSepArray = []
-
     index2 = np.where(counts > 1)[0]
-    # breakpoint()
     oids = dat4[f"{clusterName.lower()}_oid"][index2]
     oids = np.asarray(oids)
     clusterOids = np.asarray(dat4[f"{clusterName.lower()}_oid"])
@@ -709,24 +656,11 @@ if __name__ == "__main__":
         else:
             indexKeep[i] = indexi
 
-    # breakpoint()
-    # dat5 = dat4[["pmra","pmdec"]].copy()
     PMRA = pd.DataFrame(dat4["pmra"][indexKeep])
     PMDEC = pd.DataFrame(dat4["pmdec"][indexKeep])
     oids = pd.DataFrame(dat4[f"{clusterName.lower()}_oid"][indexKeep])
     parallaxGaia = pd.DataFrame(dat4["parallax"][indexKeep])
     parallaxErrorGaia = pd.DataFrame(dat4["parallax_error"][indexKeep])
     dat5 = pd.concat([PMRA, PMDEC, oids, parallaxGaia, parallaxErrorGaia], axis="columns")
-    # dat5 = dat4[["pmra","pmdec"]][indexKeep].copy()
-    # print(dat4)
-    '''
-    clusters = DBSCAN(eps=0.7, min_samples=3).fit(dat5)
-    plt.figure(figsize=(8,6))
-    p = sns.scatterplot(data=dat5, x="pmra", y="pmdec", hue=clusters.labels_, legend="brief", palette="deep")
-    sns.move_legend(p, "upper center", bbox_to_anchor=(0.15,0.42), fontsize = "x-small", ncol=3, title='Clusters')
-    plt.title("Proper Motion Clustering")
-    plt.show()
-    '''
-    # print(dat)
 
     main()
