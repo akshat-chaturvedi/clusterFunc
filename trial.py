@@ -15,7 +15,7 @@ import time
 #Last updated July 5 2023
 ## Explainer: Currently creating CMDs using unprocessed (dereddening), observed mag values. CandStar lists of both UBV
 ## and VBV are produced. HEB checking individuals.
-
+'''
 clusterName = input("Enter a cluster name:")
 clusterNameFile = ("{}.phot".format(clusterName))
 clusterGaiaFile = ("NewCoor/{}_new_coor.dat".format(clusterName))
@@ -95,6 +95,7 @@ parallaxErrorGaia = pd.DataFrame(dat4["parallax_error"][indexKeep])
 dat5 = pd.concat([PMRA,PMDEC,oids,parallaxGaia, parallaxErrorGaia],axis="columns")
 #dat5 = dat4[["pmra","pmdec"]][indexKeep].copy()
 #print(dat4)
+'''
 '''
 clusters = DBSCAN(eps=0.7, min_samples=3).fit(dat5)
 plt.figure(figsize=(8,6))
@@ -250,8 +251,8 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     # #ax.plot(xplot,model_f(xplot,*popt),'r--')
 
     #HB Model Equation
-    y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.05)
-    y_u = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65, 0.6)
+    y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.2)
+    y_u = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65, 0.8)
 
     #y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
     UVBrightCond = np.logical_and(v[indAll]<y2,bv[indAll]<-0.05)
@@ -344,7 +345,7 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     xplot = np.linspace(bv[indAll].min(), bv[indAll].max(), len(bv[indAll]))
     # x_array = np.linspace(-0.6,1.3,100)
     # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
-    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.05)
+    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.2)
     ax.plot(xplot, y, "r-")
     ax.vlines(x=-0.05, ymin=-4, ymax=5)
     # ax.plot(xplot,model_f(xplot,*popt),'r--')
@@ -420,7 +421,7 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     #y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 2.1)
     xplot = np.linspace(bv[indAll].min(), bv[indAll].max(), len(bv[indAll]))
     # x_array = np.linspace(-0.6,1.3,100)
-    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65,0.6)
+    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65,0.8)
     # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
     ax.plot(xplot, y, "r-")
     ax.vlines(x=-0.05, ymin=-4, ymax=5)
@@ -725,4 +726,93 @@ def main():
 
 
 if __name__ == "__main__":
+    clusterName = input("Enter a cluster name:")
+    clusterNameFile = ("{}.phot".format(clusterName))
+    clusterGaiaFile = ("NewCoor/{}_new_coor.dat".format(clusterName))
+    clusterGaiaResults = ("{}.csv".format(clusterName))
+    # clusterNameDict = clusterName.replace()
+    # breakpoint()
+    # dist = float(input("Enter a distance:"))
+    dist = float(locals()[clusterName]['dist'])
+    # ebv = float(input("Enter a E(B-V) value:"))
+    ebv = float(locals()[clusterName]['ebv'])
+    # raClust = str(input("Enter the RA with spaces:"))
+    raClust = str(locals()[clusterName]['ra'])
+    # decClust = str(input("Enter the Dec with spaces:"))
+    decClust = str(locals()[clusterName]['dec'])
+    # c = float(input("Enter King-model central concentration value:"))
+    c = float(locals()[clusterName]['c'])
+    # r_c = float(input("Enter a core radius in arcminutes:"))
+    r_c = float(locals()[clusterName]['r_c'])
+
+    # breakpoint()
+
+    dat = Table.read(clusterNameFile, format="ascii")
+    dat2 = Table.read(clusterGaiaFile, format="ascii")
+    # print(dat2)
+    dat4 = pd.read_csv("GAIAData/{}".format(clusterGaiaResults))
+    dat4 = dat4.fillna(1000)
+
+    ext = "testing123"
+
+    unID, indexes, inverse, counts = np.unique(dat4[f"{clusterName.lower()}_oid"],
+                                               return_index=True,
+                                               return_counts=True,
+                                               return_inverse=True)
+
+    # angSepArray = []
+
+    index2 = np.where(counts > 1)[0]
+    # breakpoint()
+    oids = dat4[f"{clusterName.lower()}_oid"][index2]
+    oids = np.asarray(oids)
+    clusterOids = np.asarray(dat4[f"{clusterName.lower()}_oid"])
+    angSep = np.asarray(dat4["ang_sep"])
+    parallaxArray = np.asarray(dat4["parallax"])
+    angSepUniq, parUniq = angSep[indexes], parallaxArray[indexes]
+
+    indexKeep = np.zeros_like(counts)
+
+    for i, oid in enumerate(unID):
+        indexi = indexes[i]
+        if counts[i] > 1:
+            angList, indList = [], []
+            for j in range(counts[i]):
+                if parUniq[i + j] > 90:
+                    continue
+                else:
+                    try:
+                        angList.append(angSepUniq[i + j])
+                        indList.append(indexi + j)
+                    except:
+                        pass
+            # breakpoint()
+            if len(angList) == 0:
+                indexKeep[i] = indexi
+            else:
+                angList, indList = np.array(angList), np.array(indList)
+                indexKeep[i] = indList[np.argmin(angList)]
+        else:
+            indexKeep[i] = indexi
+
+    # breakpoint()
+    # dat5 = dat4[["pmra","pmdec"]].copy()
+    PMRA = pd.DataFrame(dat4["pmra"][indexKeep])
+    PMDEC = pd.DataFrame(dat4["pmdec"][indexKeep])
+    oids = pd.DataFrame(dat4[f"{clusterName.lower()}_oid"][indexKeep])
+    parallaxGaia = pd.DataFrame(dat4["parallax"][indexKeep])
+    parallaxErrorGaia = pd.DataFrame(dat4["parallax_error"][indexKeep])
+    dat5 = pd.concat([PMRA, PMDEC, oids, parallaxGaia, parallaxErrorGaia], axis="columns")
+    # dat5 = dat4[["pmra","pmdec"]][indexKeep].copy()
+    # print(dat4)
+    '''
+    clusters = DBSCAN(eps=0.7, min_samples=3).fit(dat5)
+    plt.figure(figsize=(8,6))
+    p = sns.scatterplot(data=dat5, x="pmra", y="pmdec", hue=clusters.labels_, legend="brief", palette="deep")
+    sns.move_legend(p, "upper center", bbox_to_anchor=(0.15,0.42), fontsize = "x-small", ncol=3, title='Clusters')
+    plt.title("Proper Motion Clustering")
+    plt.show()
+    '''
+    # print(dat)
+
     main()
