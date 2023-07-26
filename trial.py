@@ -11,6 +11,7 @@ import seaborn as sns
 from PyAstronomy import pyasl
 from clusterDicts import *
 import time
+import logging
 
 #Last updated July 5 2023
 ## Explainer: Currently creating CMDs using unprocessed (dereddening), observed mag values. CandStar lists of both UBV
@@ -634,10 +635,17 @@ def main():
     clusterFunc(dat, ebv, dist, rv=3.315,ru=5.231,rb=4.315, ri = 1.940)
     end = time.time()
     timeTaken = (end-start)
+    logging.info('Run successful, extension: {}, execution time: {:.2f}'.format(ext, timeTaken))
     print("Execution time: ", timeTaken)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(filename='logs.log',
+                        encoding='utf-8',
+                        format='%(levelname)s (%(asctime)s): %(message)s (Line: %(lineno)d [%(filename)s])',
+                        datefmt='%d/%m/%Y %I:%M:%S %p',
+                        level=logging.INFO)
+
     clusterName = input("Enter a cluster name:")
     clusterNameFile = ("{}.phot".format(clusterName))
     clusterGaiaFile = ("NewCoor/{}_new_coor.dat".format(clusterName))

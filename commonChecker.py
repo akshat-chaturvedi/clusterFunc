@@ -2,6 +2,13 @@ import numpy as np
 import pandas as pd
 from astropy.table import Table
 import matplotlib.pyplot as plt
+import logging
+
+logging.basicConfig(filename='logs.log',
+                    encoding='utf-8',
+                    format='%(levelname)s (%(asctime)s): %(message)s (Line: %(lineno)d [%(filename)s])',
+                    datefmt='%d/%m/%Y %I:%M:%S %p',
+                    level=logging.INFO)
 
 df = pd.read_csv("clusterMembers/M79_memberStars_6.dat", delimiter="\t", skiprows=2)
 
@@ -77,9 +84,10 @@ vi = v-i
 
 if (vi[1543] > 0.331+1.444*bv[1543]):
     print(0)
+    logging.error('Run unsuccessful')
 else:
     print(1)
-
+    logging.info('Run successful')
 
 
 
