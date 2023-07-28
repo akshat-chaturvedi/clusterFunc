@@ -13,7 +13,7 @@ import logging
 ## Explainer: Currently creating CMDs using unprocessed (dereddening), observed mag values. CandStar lists of both UBV
 ## and VBV are produced. HEB checking individuals.
 
-ext = "testing"
+ext = "testing123"
 
 def coordTransfer(ra, dec):
     raString = ra.split(" ")
@@ -127,7 +127,6 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     tidalRad = tidalRadius(c,r_c)
     tidalCond = np.where(angSep<tidalRad)[0]
     indAll = np.intersect1d(indAll, tidalCond)
-##    breakpoint()
     #indParSiegel = ind[parCond]
     indParSiegel = indSiegel[parCond]
     indAll = np.intersect1d(indAll, indParSiegel)

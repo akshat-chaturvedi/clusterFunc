@@ -41,7 +41,7 @@ b = np.intersect1d(starNums1, lst)
 
 # print(b)
 
-clusterName = "M80"
+clusterName = "M9"
 clusterNameFile = ("{}.phot".format(clusterName))
 
 dat = Table.read(clusterNameFile, format="ascii")
@@ -53,21 +53,20 @@ i = dat['col6']
 chi = dat['col12']
 sharp = dat['col13']
 
-ind = np.where(dat['col1'] == 6422)[0]
+ind = np.where(dat['col1'] == 320)[0]
 cond = np.logical_or.reduce((b>60,v>60, chi>3, abs(sharp)>0.5))
     #cond = np.logical_and.reduce((b<60,v<60))
 ind = np.where(cond)[0]
 
-# print(dat[ind])
+print(dat[ind])
 
 dat1 = dat[ind]
 
-moo = np.where(dat1["col1"]==10002)[0]
+moo = np.where(dat1['col1'] == 320)[0]
+print(moo)
 
-# print(dat1[moo])
-
-df2 = Table.read("clusterMembers/M80_memberStars_10002.dat", format="ascii", delimiter="\s")
-# df3 = Table.read("candStars/candStarMasterList/M14_candStarsMaster_testing.dat", format="ascii", delimiter="\s")
+df2 = Table.read("clusterMembers/M9_memberStars_testing.dat", format="ascii", delimiter="\s")
+df3 = Table.read("candStars/candStarMasterList/M9_candStarsMaster_testing.dat", format="ascii", delimiter="\s")
 # print(df2)
 
 vRaw = df2['col14']
@@ -82,38 +81,38 @@ vi = v-i
 
 # print(df2)
 
-if (vi[1543] > 0.331+1.444*bv[1543]):
-    print(0)
-    logging.error('Run unsuccessful')
-else:
-    print(1)
-    logging.info('Run successful')
+# if (vi[1543] > 0.331+1.444*bv[1543]):
+#     print(0)
+#     logging.error('Run unsuccessful')
+# else:
+#     print(1)
+#     logging.info('Run successful')
 
 
 
-# vRaw1 = df3['col14']
-# B1 = df3['col13']
-# bvRaw1 = B1-vRaw1
-#
-# v1 = df3['col11']
-# b1 = df3['col10']
-# bv1 = b1-v1
+vRaw1 = df3['col14']
+B1 = df3['col13']
+bvRaw1 = B1-vRaw1
+
+v1 = df3['col11']
+b1 = df3['col10']
+bv1 = b1-v1
 
 def model_f(x,a,b,c,d,e,f,g,k):
     x=x+k
     return a*x**6+b*x**5+c*x**4+d*x**3+e*x**2+f*x+g
 
 # fig, ax = plt.subplots()
-# ax.scatter(bv, v, c='k', s=0.1)
+# ax.scatter(bvRaw, vRaw, c='k', s=0.1)
 # # ax.scatter(bvhb,vhb,c='b',s=2)
-# ax.scatter(bv1, v1, c='orangered', s=5, marker="o")
+# ax.scatter(bvRaw1, vRaw1, c='orangered', s=5, marker="o")
 # xplot = np.linspace(bv1.min(), bv1.max(), len(bv1))
 # # -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15
 # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,-0.15)
-# ax.plot(bv1, y, color="red", linestyle="--")
+# # ax.plot(bv1, y, color="red", linestyle="--")
 # # ax.set_title("{} $E(B-V)$={:.2f} $m-M$={:.2f}".format(clusterName, ebv, distModulus))
 # ax.set_xlim(-0.75, 1.3)
-# ax.set_ylim(5,-4)
+# ax.set_ylim(22,12)
 # ax.set_xlabel('$B-V$')
 # ax.set_ylabel('$V$')
 # plt.show()
