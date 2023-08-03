@@ -3,6 +3,10 @@ import hashlib
 from urllib.request import urlopen, Request
 import logging
 from emailer import sendMail
+from dotenv import load_dotenv
+
+load_dotenv('.env')
+
 
 def read_last_hash(fileName: str):
     with open(fileName, 'r', encoding='utf-8') as file:

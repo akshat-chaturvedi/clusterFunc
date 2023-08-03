@@ -41,7 +41,7 @@ b = np.intersect1d(starNums1, lst)
 
 # print(b)
 
-clusterName = "M9"
+clusterName = "M14"
 clusterNameFile = ("{}.phot".format(clusterName))
 
 dat = Table.read(clusterNameFile, format="ascii")
@@ -58,16 +58,21 @@ cond = np.logical_or.reduce((b>60,v>60, chi>3, abs(sharp)>0.5))
     #cond = np.logical_and.reduce((b<60,v<60))
 ind = np.where(cond)[0]
 
-print(dat[ind])
+# print(dat[ind])
 
 dat1 = dat[ind]
 
-moo = np.where(dat1['col1'] == 320)[0]
+#[5212 6215  6395  6458 6908]
+
+moo = np.where(dat1['col1'] == 6908)[0]
 print(moo)
 
-df2 = Table.read("clusterMembers/M9_memberStars_testing.dat", format="ascii", delimiter="\s")
-df3 = Table.read("candStars/candStarMasterList/M9_candStarsMaster_testing.dat", format="ascii", delimiter="\s")
+df2 = Table.read("nonMembers/M14_nonMembers_testing123.dat", format="ascii", delimiter="\s")
+df3 = Table.read("clusterMembers/M14_memberStars_testing123.dat", format="ascii", delimiter="\s")
 # print(df2)
+
+
+
 
 vRaw = df2['col14']
 B = df2['col13']
@@ -88,15 +93,26 @@ vi = v-i
 #     print(1)
 #     logging.info('Run successful')
 
+lst1 = [10001,9243,8956,8812,8119,7645,7386,7075,6897,6908,6682,6458,6395,6215,5262,5212,5096,4987,4562,3006,1320]
 
+# print(df2['col1'])
 
-vRaw1 = df3['col14']
-B1 = df3['col13']
-bvRaw1 = B1-vRaw1
+# for j in range(len(lst1)):
+#     print(lst1[j])
+#     print(np.where(df2['col1'] == lst1[j])[0])
+#     print(np.where(df3['col1'] == lst1[j])[0])
+#     print("================================")
 
-v1 = df3['col11']
-b1 = df3['col10']
-bv1 = b1-v1
+print(np.intersect1d(lst1, df2['col1']))
+
+#
+# vRaw1 = df3['col14']
+# B1 = df3['col13']
+# bvRaw1 = B1-vRaw1
+#
+# v1 = df3['col11']
+# b1 = df3['col10']
+# bv1 = b1-v1
 
 def model_f(x,a,b,c,d,e,f,g,k):
     x=x+k
