@@ -78,7 +78,7 @@ def gethbtop(bv,v):
 
 #Plots that need fitting
 
-def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c, uRaw, vRaw, bRaw, iRaw, ebv, flagArray):
+def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c, uRaw, vRaw, bRaw, iRaw, ebv, flagArray, distModulus):
     dat6 = pd.concat([dat5["pmra"],dat5["pmdec"]], axis="columns")
     fig, ax = plt.subplots()
     ax.scatter(dat6['pmra'], dat6['pmdec'], s = 0.1, marker="x")
@@ -144,7 +144,7 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     ########################################
 
 
-    distModulus = 5*np.log10(dist*100)
+    # distModulus = 5*np.log10(dist*100)
 
     #HB Model Equation
     y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.05)
@@ -575,7 +575,7 @@ def clusterFunc(dat,ebv,dist,rv=3.164,ru=4.985,rb=4.170, ri = 1.940):
     # UBVIplotBestFit(vi,ub,clusterName)
     # UBBVVIplotBestFit(vi,ubbv,clusterName)
     # BBVplotBestFit(bv,b2,clusterName)
-    DBSCANPlots(bv,v2,b2,u2,vi,ub,ubbv,clusterName, ind,dist,raClust,decClust,c,r_c,u,v,b,i,ebv,blueFlagArray)
+    DBSCANPlots(bv,v2,b2,u2,vi,ub,ubbv,clusterName, ind,dist,raClust,decClust,c,r_c,u,v,b,i,ebv,blueFlagArray, distModulus)
     # You're done for this cluster!
 
 def main():
@@ -611,6 +611,7 @@ if __name__ == "__main__":
     c = float(locals()[clusterName]['c'])
     # r_c = float(input("Enter a core radius in arcminutes:"))
     r_c = float(locals()[clusterName]['r_c'])
+    distModulus = float(locals()[clusterName]['harrisDistMod'])
 
     dat = Table.read(clusterNameFile, format="ascii")
     dat2 = Table.read(clusterGaiaFile, format="ascii")
