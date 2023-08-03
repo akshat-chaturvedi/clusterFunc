@@ -9,9 +9,9 @@ from clusterDicts import *
 import time
 import logging
 
-#Last updated July 5 2023
-## Explainer: Currently creating CMDs using unprocessed (dereddening), observed mag values. CandStar lists of both UBV
-## and VBV are produced. HEB checking individuals.
+# Last updated July 5 2023
+# Explainer: Currently creating CMDs using unprocessed (dereddening), observed mag values. CandStar lists of both UBV
+# and VBV are produced. HEB checking individuals.
 
 ext = "5Sigma"
 
@@ -40,7 +40,6 @@ def degToRad(theta):
 
 def tidalRadius(c, r_c):
     tidalRad = r_c*(10**c)
-    #tidalRad = r_c*(np.exp(c))
     return tidalRad
 
 def arcMinAngularSep(a1, d1, a2, d2):
@@ -67,18 +66,9 @@ def dereddening(uinit,binit,vinit,iinit,ebv,ru,rb,rv,ri,dist_kpc):
     i = iinit - 5*np.log10(dist_kpc*100) - ri*ebv
     return u, b, v, i        
 
-def dereddening1(binit,vinit,ebv,dist_kpc):
-    b = binit - 5*np.log10(dist_kpc*100)
-    v = vinit - 5*np.log10(dist_kpc*100)
-    return b,v
+# Plots that need fitting
 
-def gethbtop(bv,v):
-    cond = v-bv>5
-    return bv[cond], v[cond]
-
-#Plots that need fitting
-
-def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c, uRaw, vRaw, bRaw, iRaw, ebv, flagArray, distModulus):
+def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, decClust, c, r_c, uRaw, vRaw, bRaw, iRaw, ebv, flagArray, distModulus):
     dat6 = pd.concat([dat5["pmra"],dat5["pmdec"]], axis="columns")
     fig, ax = plt.subplots()
     ax.scatter(dat6['pmra'], dat6['pmdec'], s = 0.1, marker="x")
@@ -89,36 +79,31 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     ax.set_ylim(-15, 15)
     fig.savefig("PMPlots/%s_%s.png" % (clusterName, ext), bbox_inches="tight", dpi=300)
 
+    # DBSCAN clustering algorithm takes proper motions in RA and Dec from Gaia DR3 data, also plots the DBSCAN plots
+
     clusters = DBSCAN(eps=0.3, min_samples=5).fit(dat6)
     #clusters = DBSCAN(eps=0.9, min_samples=2).fit(dat5)
     labels = DBSCAN(eps=0.7, min_samples=3).fit_predict(dat6)
     #labels = DBSCAN(eps=0.9, min_samples=2).fit_predict(dat5)
     plt.figure(figsize=(8,6))
-    #colors = sns.color_palette("husl",3)
     p = sns.scatterplot(data=dat5, x="pmra", y="pmdec",size=0.01,marker="+" ,hue=clusters.labels_, legend="brief", palette="deep")
-    #breakpoint()
     sns.move_legend(p, "upper center", bbox_to_anchor=(0.15,0.42), fontsize = "x-small", ncol=3, title='Clusters')
     plt.title("Proper Motion Clustering")
-    #breakpoint()
     plt.xlabel("pmra [mas yr$^{-1}$]")
     plt.ylabel("pmdec [mas yr$^{-1}$]")
     plt.xlim(-20,15)
     plt.ylim(-15,15)
     plt.savefig("DBSCANPlots/%s_%s.png"%(clusterName,ext), bbox_inches="tight",dpi=300)
-    #print(dat4.iloc[labels==0,2])
     #indSiegel = dat5[f"{clusterName.lower()}_oid"]
     indSiegel = dat5[f"{clusterName.lower()}_oid"]-1
     indSiegel = np.asarray(indSiegel)
     indLab = np.where(labels==0)[0]
-    ## Plotting for stars not in cluster
-    # notInClust = np.where(labels!=0)[0]
-    # notInClustSiegel = indSiegel[notInClust]
-    ########################################
     #indLab = np.arange(len(labels))
     indSiegelDB = indSiegel[indLab]
     indAll = np.intersect1d(indSiegelDB, cond)
-##    breakpoint()
     #indAll = np.arange(len(bv))
+
+    # Cluster membership checks (within tidal radius, within 5 sigma of parallax, DBSCAN)
 
     clusterCore = coordTransfer(raClust, decClust)
     angSep = arcMinAngularSep(clusterCore[0],clusterCore[1], dat2["col2"],dat2["col3"])
@@ -127,11 +112,11 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     tidalRad = tidalRadius(c,r_c)
     tidalCond = np.where(angSep<tidalRad)[0]
     indAll = np.intersect1d(indAll, tidalCond)
-    #indParSiegel = ind[parCond]
     indParSiegel = indSiegel[parCond]
     indAll = np.intersect1d(indAll, indParSiegel)
 
-    ## Plotting for stars not in cluster
+    # Getting non-members from membership tests (bad photometry rejects are in main())
+
     notInTidalRadCond = np.where(angSep>tidalRad)[0]
     notInParCond = np.where(parDiff > 3*parStarErr)[0]
     notInParCond = indSiegel[notInParCond]
@@ -143,31 +128,28 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     notInClustSiegel = np.intersect1d(indSiegel, nonMemberCond)
     ########################################
 
-
     # distModulus = 5*np.log10(dist*100)
 
-    #HB Model Equation
-    y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.05)
-    y_u = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65, 0.8)
+    # HB Model Equation for use in plots and UVBright conditions
 
-    #y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
-    UVBrightCond = np.logical_and(v[indAll]<y2,bv[indAll]<-0.05)
+    y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.05)  # VBV
+    y_u = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65, 0.8)  # UBV
 
-    ############RAW STAR MAG CMDS######################
+    UVBrightCond = np.logical_and(v[indAll] < y2, bv[indAll] < -0.05)  # For VBV
+
+    ############ RAW STAR MAG CMDS ######################
 
     bvRaw = bRaw - vRaw
 
+    # VBV (RAW) Plots
 
     fig, ax = plt.subplots()
     ax.scatter(bvRaw[indAll], vRaw[indAll], c='k', s=0.1)
-    # ax.scatter(bvhb,vhb,c='b',s=2)
     xplot = np.linspace(bvRaw[indAll].min(), bvRaw[indAll].max(), len(bvRaw[indAll]))
-    # x_array = np.linspace(-0.6,1.3,100)
     y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
     # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
-    #ax.plot(xplot, y, "r-")
+    # ax.plot(xplot, y, "r-")
     ax.vlines(x=-0.05, ymin=-4, ymax=5)
-    # ax.plot(xplot,model_f(xplot,*popt),'r--')
     # y2 = model_f(bvRaw[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
     # y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
     ax.scatter(bvRaw[indAll][UVBrightCond], vRaw[indAll][UVBrightCond], c='g', s=2)
@@ -176,19 +158,18 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     ax.set_ylim(21, 11.5)
     ax.set_xlabel('$B-V$')
     ax.set_ylabel('$V$')
-    fig.savefig('Plots/DBSCAN/RAW/VBV/VvsBV_%s_DBSCAN_RAW_%s.png'%(clusterName,ext), bbox_inches='tight', dpi=300)
+    fig.savefig('Plots/DBSCAN/RAW/VBV/VvsBV_%s_DBSCAN_RAW_%s.png' % (clusterName, ext), bbox_inches='tight', dpi=300)
+
+    # UBV (RAW) Plots
 
     fig, ax = plt.subplots()
     ax.scatter(bvRaw[indAll], uRaw[indAll], c='k', s=0.1)
-    # ax.scatter(bvhb,vhb,c='b',s=2)
     xplot = np.linspace(bvRaw[indAll].min(), bvRaw[indAll].max(), len(bvRaw[indAll]))
-    # x_array = np.linspace(-0.6,1.3,100)
     # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
     UVBrightCond1 = np.logical_and(u[indAll] < y_u, bv[indAll] < -0.05)
     # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
-    #ax.plot(xplot, y, "r-")
+    # ax.plot(xplot, y, "r-")
     ax.vlines(x=-0.05, ymin=-4, ymax=5)
-    # ax.plot(xplot,model_f(xplot,*popt),'r--')
     # y2 = model_f(bvRaw[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
     # y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
     ax.scatter(bvRaw[indAll][UVBrightCond1], uRaw[indAll][UVBrightCond1], c='g', s=2)
@@ -197,9 +178,9 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     ax.set_ylim(21, 13.5)
     ax.set_xlabel('$B-V$')
     ax.set_ylabel('$u$')
-    fig.savefig('Plots/DBSCAN/RAW/UBV/UvsBV_%s_DBSCAN_RAW_%s.png' %(clusterName, ext), bbox_inches='tight', dpi=300)
+    fig.savefig('Plots/DBSCAN/RAW/UBV/UvsBV_%s_DBSCAN_RAW_%s.png' % (clusterName, ext), bbox_inches='tight', dpi=300)
 
-    ############RAW STAR MAG CMDS######################
+    ############ RAW STAR MAG CMDS ######################
 
     UVBrightRA = dat2["col2"][indAll][UVBrightCond]
     UVBrightDec = dat2["col3"][indAll][UVBrightCond]
@@ -213,13 +194,13 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     coordArrayDec1 = []
 
     for i in range(0,len(UVBrightRA)):
-        sexa = pyasl.coordsDegToSexa(UVBrightRA[i],UVBrightDec[i])
+        sexa = pyasl.coordsDegToSexa(UVBrightRA[i], UVBrightDec[i])
         sexaLen = len(sexa)-1
         coordArrayRA.append(sexa[0:12])
         coordArrayDec.append(sexa[14:sexaLen])
 
     for i in range(0,len(UVBrightRA1)):
-        sexa = pyasl.coordsDegToSexa(UVBrightRA1[i],UVBrightDec1[i])
+        sexa = pyasl.coordsDegToSexa(UVBrightRA1[i], UVBrightDec1[i])
         sexaLen = len(sexa)-1
         coordArrayRA1.append(sexa[0:12])
         coordArrayDec1.append(sexa[14:sexaLen])
@@ -229,37 +210,29 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     coordArrayRA1 = np.array(coordArrayRA1)
     coordArrayDec1 = np.array(coordArrayDec1)
 
-    #fileArray = np.column_stack((indAll[UVBrightCond],dat2["col2"][indAll][UVBrightCond],dat2["col3"][indAll][UVBrightCond],bv[indAll][UVBrightCond],v[indAll][UVBrightCond]))
-    #fileArray1 = np.column_stack((indAll[UVBrightCond],coordArrayRA,coordArrayDec,bv[indAll][UVBrightCond],v[indAll][UVBrightCond]))
-    #breakpoint()
-    #infiles = np.savetxt("candStars/%s_candStars.dat"%(clusterName,ext),fileArray, fmt="%d,%.6f,%.6f,%.2f,%.2f", delimiter = ",",header="SiegelIndex,RA,Dec,(B-V)0,Mv")
-    #infiles1 = np.savetxt("candStars/%s_candStars1.dat"%(clusterName,ext),fileArray1, fmt="%s", delimiter = "\t",header="Siegel_Index    RA    Dec    (B-V)_0    M_V")
+    # VBV (DBSCAN) Plots
 
     fig, ax = plt.subplots()
     ax.scatter(bv[indAll], v[indAll], c='k', s=0.1)
-    # ax.scatter(bvhb,vhb,c='b',s=2)
     xplot = np.linspace(bv[indAll].min(), bv[indAll].max(), len(bv[indAll]))
     # x_array = np.linspace(-0.6,1.3,100)
     # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
     y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.05)
     ax.plot(xplot, y, "r-")
     ax.vlines(x=-0.05, ymin=-4, ymax=5)
-    # ax.plot(xplot,model_f(xplot,*popt),'r--')
     ax.scatter(bv[indAll][UVBrightCond],v[indAll][UVBrightCond],c='g',s=2)
-    ax.set_xlim(-0.75,1.6)
-    ax.set_ylim(5,-4)
-    #ax.text(1,4.2, "{}\n E(B-V) = {}".format(clusterName,ebv),bbox={'facecolor': 'white','alpha':0.5}, fontsize=10)
+    ax.set_xlim(-0.75, 1.6)
+    ax.set_ylim(5, -4)
     ax.set_xlabel('($B-V$)$_0$')
-    #ax.set_xlabel('(\textit{$B-V$})$_0$')
     ax.set_ylabel('M$_V$', style="italic")
-    #ax.legend(loc="lower right", fontsize = "small")
     ax.set_title("{} $E(B-V)$={:.2f} $(m-M)_0$={:.2f}".format(clusterName,ebv,distModulus))
-    #fig.savefig('Plots/DBSCAN/VBV/VvsBV_%s_DBSCAN.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
-    fig.savefig('Plots/DBSCAN/VBV/VvsBV_%s_DBSCAN_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)    
-    #breakpoint()
+    fig.savefig('Plots/DBSCAN/VBV/VvsBV_%s_DBSCAN_%s.png' % (clusterName, ext), bbox_inches='tight', dpi=300)
 
-    ##########################################IMPORTANT Non-Member CMDS#####################################################
+    ########################################## IMPORTANT Non-Member CMDS ###############################################
     bvRaw = bRaw - vRaw
+
+    # VBV (Non-Member) Plots
+
     fig, ax = plt.subplots()
     ax.scatter(bvRaw[notInClustSiegel], vRaw[notInClustSiegel], c='k', s=0.1)
     ax.set_xlim(-0.75, 1.6)
@@ -271,7 +244,9 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
     # ax.plot(xplot, y, "r-")
     ax.vlines(x=0.4, ymin=8, ymax=25, color="orangered", linestyle="--")
-    fig.savefig('Plots/DBSCAN/nonMemberPlots/VBV/VvsBV_%s_NM.png'%(clusterName),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/DBSCAN/nonMemberPlots/VBV/VvsBV_%s_NM.png' % (clusterName), bbox_inches='tight', dpi=300)
+
+    # UBV (Non-Member) Plots
 
     fig, ax = plt.subplots()
     ax.scatter(bvRaw[notInClustSiegel], uRaw[notInClustSiegel], c='k', s=0.1)
@@ -284,7 +259,7 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
     # ax.plot(xplot, y, "r-")
     ax.vlines(x=0.4, ymin=8, ymax=25, color="orangered", linestyle="--")
-    fig.savefig('Plots/DBSCAN/nonMemberPlots/UBV/UvsBV_%s_NM.png'%(clusterName), bbox_inches='tight', dpi=300)
+    fig.savefig('Plots/DBSCAN/nonMemberPlots/UBV/UvsBV_%s_NM.png' % (clusterName), bbox_inches='tight', dpi=300)
     ##########################################IMPORTANT Non-Member CMDS#####################################################
 
 
@@ -311,31 +286,22 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
 
     fig, ax = plt.subplots()
     ax.scatter(bv[indAll],u[indAll],c='k',s=0.1)
-    #ax.scatter(bvhb,vhb,c='b',s=2)
-    xplot = np.linspace(bv.min(),bv.max(),100001)
-    x_array = np.linspace(-0.6,1.3,100)
-    #y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 2.1)
     xplot = np.linspace(bv[indAll].min(), bv[indAll].max(), len(bv[indAll]))
-    # x_array = np.linspace(-0.6,1.3,100)
     y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65,0.8)
-    # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.83)
     ax.plot(xplot, y, "r-")
     ax.vlines(x=-0.05, ymin=-4, ymax=5)
     # ax.plot(xplot,model_f(xplot,*popt),'r--')
     # y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65,-0.01)
     #ax.plot(xplot, y, "r-")
-    ax.vlines(x = -0.05, ymin = -3, ymax = 4)
-    #ax.plot(xplot,model_f(xplot,*popt),'r--')
-    #y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 2.1)
-    #UVBrightCond = np.logical_and(u[indAll]<y2,bv[indAll]<-0.05)
+    ax.vlines(x=-0.05, ymin=-3, ymax=4)
     UVBrightCond1 = np.logical_and(u[indAll] < y_u, bv[indAll] < -0.05)
-    ax.scatter(bv[indAll][UVBrightCond1],u[indAll][UVBrightCond1],c='g',s=2)
+    ax.scatter(bv[indAll][UVBrightCond1], u[indAll][UVBrightCond1], c='g', s=2)
     ax.set_title("{} $E(B-V)$={:.2f} $(m-M)_0$={:.2f}".format(clusterName, ebv, distModulus))
     ax.set_xlim(-0.75,1.3)
     ax.set_ylim(5,-4)
     ax.set_xlabel('($B-V$)$_0$')
     ax.set_ylabel('$M_u$')
-    fig.savefig('Plots/DBSCAN/UBV/UvsBV_%s_DBSCAN_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/DBSCAN/UBV/UvsBV_%s_DBSCAN_%s.png' % (clusterName, ext), bbox_inches='tight', dpi=300)
 
     UVBrightRA2 = dat2["col2"][indAll][UVBrightCond1]
     UVBrightDec2 = dat2["col3"][indAll][UVBrightCond1]
@@ -403,6 +369,8 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     infiles4 = np.savetxt("nonMembers/%s_nonMembers_%s.dat"%(clusterName, ext),fileArray5, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f", delimiter = "\t",header="{} E(B-V)={:.2f}, (m-M)_0 = {:.2f}\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI".format(clusterName,ebv, distModulus))
     infiles5 = np.savetxt("candStars/candStarMasterList/%s_candStarsMaster_%s.dat"%(clusterName,ext),candStarMasterList, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, (m-M)_0 = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
 
+    # OTHER CMD COMBINATIONS (not currently needed)
+
     '''
     fig, ax = plt.subplots()
     ax.scatter(bv[indAll],ub[indAll],c='k',s=0.1)
@@ -431,115 +399,101 @@ def DBSCANPlots(bv,v,b,u,vi,ub,ubbv,clusterName,cond,dist,raClust,decClust,c,r_c
     ax.set_ylabel('(U-B)-(B-V)')
     fig.savefig('Plots/DBSCAN/UBBVVI/UBBVvsVI_%s_DBSCAN_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
     '''
-def VBVplotBestFit(bv,v,clusterName,dist,ebv):
-    distModulus = 5*np.log10(dist*100)
+def VBVplotBestFit(bv, v, clusterName, dist, ebv):
     fig, ax = plt.subplots()
     ax.scatter(bv,v,c='k',s=0.1)
-    #ax.scatter(bvhb,vhb,c='b',s=2)
     xplot = np.linspace(bv.min(),bv.max(),100001)
-    #x_array = np.linspace(-0.6,1.3,100)
     y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.2,0)
     ax.plot(xplot, y, "r-")
-    ax.vlines(x = -0.05, ymin = -4, ymax = 5)
-    #ax.plot(xplot,model_f(xplot,*popt),'r--')
+    ax.vlines(x=-0.05, ymin=-4, ymax=5)
     ax.set_xlim(-0.75,1.6)
     ax.set_ylim(5,-4)
     ax.set_xlabel('($B-V$)$_0$')
     ax.set_ylabel('$M_V$')
     ax.set_title("{} $E(B-V)$={:.2f} $(m-M)_0$={:.2f}".format(clusterName,ebv,distModulus))
     
-    fig.savefig('Plots/VBV/VvsBV_%s_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/VBV/VvsBV_%s_%s.png' % (clusterName, ext), bbox_inches='tight', dpi=300)
 
-def BBVplotBestFit(bv,b,clusterName):
+def BBVplotBestFit(bv, b, clusterName):
     fig, ax = plt.subplots()
-    ax.scatter(bv,b,c='k',s=0.1)
-    #ax.scatter(bvhb,vhb,c='b',s=2)
+    ax.scatter(bv, b, c='k', s=0.1)
     xplot = np.linspace(bv.min(),bv.max(),100001)
-    #x_array = np.linspace(-0.6,1.3,100)
     y = model_f(xplot-0.2, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.2,0)
     ax.plot(xplot, y, "r-")
-    ax.vlines(x = -0.05, ymin = -3, ymax = 4)
-    #ax.plot(xplot,model_f(xplot,*popt),'r--')
-    ax.set_xlim(-0.75,1.3)
-    ax.set_ylim(4,-3)
+    ax.vlines(x=-0.05, ymin=-3, ymax=4)
+    ax.set_xlim(-0.75, 1.3)
+    ax.set_ylim(4, -3)
     ax.set_xlabel('B-V')
     ax.set_ylabel('B')
-    fig.savefig('Plots/BBV/BvsBV_%s_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/BBV/BvsBV_%s_%s.png' % (clusterName, ext), bbox_inches='tight', dpi=300)
 
 
-def UBVplotBestFit(bv,u,clusterName):
+def UBVplotBestFit(bv, u, clusterName):
     fig, ax = plt.subplots()
     ax.scatter(bv,u,c='k',s=0.1)
-    #ax.scatter(bvhb,vhb,c='b',s=2)
     xplot = np.linspace(bv.min(),bv.max(),100001)
-    x_array = np.linspace(-0.6,1.3,100)
     y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 2.1,0)
     ax.plot(xplot, y, "r-")
     ax.vlines(x = -0.05, ymin = -3, ymax = 4)
-    #ax.plot(xplot,model_f(xplot,*popt),'r--')
     ax.set_xlim(-0.75,1.3)
     ax.set_ylim(4,-3)
     ax.set_xlabel('B-V')
     ax.set_ylabel('U')
-    fig.savefig('Plots/UBV/UvsBV_%s_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/UBV/UvsBV_%s_%s.png' % (clusterName, ext), bbox_inches='tight', dpi=300)
 
-#Plots that don't need fitting
+# Plots that don't need fitting
 
-def UBBVplotBestFit(bv,ub,clusterName):
+def UBBVplotBestFit(bv, ub, clusterName):
     fig, ax = plt.subplots()
     ax.scatter(bv,ub,c='k',s=0.1)
-    ax.vlines(x = -0.05, ymin = -3, ymax = 4)
+    ax.vlines(x=-0.05, ymin=-3, ymax=4)
     ax.set_xlim(-0.75,1.3)
     ax.set_ylim(4,-3)
     ax.set_xlabel('B-V')
     ax.set_ylabel('U-B')
-    fig.savefig('Plots/UBBV/UBvsBV_%s_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/UBBV/UBvsBV_%s_%s.png' % (clusterName, ext), bbox_inches='tight', dpi=300)
 
-def UBVIplotBestFit(vi,ub,clusterName):
+def UBVIplotBestFit(vi, ub, clusterName):
     fig, ax = plt.subplots()
-    ax.scatter(vi,ub,c='k',s=0.1)
-    ax.vlines(x = -0.05, ymin = -3, ymax = 4)
-    ax.set_xlim(-0.75,1.3)
-    ax.set_ylim(4,-3)
+    ax.scatter(vi, ub, c='k', s=0.1)
+    ax.vlines(x=-0.05, ymin=-3, ymax=4)
+    ax.set_xlim(-0.75, 1.3)
+    ax.set_ylim(4, -3)
     ax.set_xlabel('V-I')
     ax.set_ylabel('U-B')
-    fig.savefig('Plots/UBVI/UBvsVI_%s_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/UBVI/UBvsVI_%s_%s.png' % (clusterName, ext), bbox_inches='tight', dpi=300)
 
 def UBBVVIplotBestFit(vi, ubbv, clusterName):
     fig, ax = plt.subplots()
-    ax.scatter(vi,ubbv,c='k',s=0.1)
-    ax.vlines(x = -0.05, ymin = -3, ymax = 4)
+    ax.scatter(vi,ubbv,c='k', s=0.1)
+    ax.vlines(x=-0.05, ymin=-3, ymax=4)
     ax.set_xlim(-0.75,1.3)
-    ax.set_ylim(4,-3)
+    ax.set_ylim(4, -3)
     ax.set_xlabel('V-I')
     ax.set_ylabel('(U-B)-(B-V)')
-    fig.savefig('Plots/UBBVVI/UBBVvsVI_%s_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/UBBVVI/UBBVvsVI_%s_%s.png' % (clusterName, ext), bbox_inches='tight', dpi=300)
 
-def dereddenPlot(bvRAW,vRAW,bv,v,clusterName,dist,ebv):
+def dereddenPlot(bvRAW, vRAW, bv, v, clusterName, dist, ebv):
     distModulus = 5*np.log10(dist*100)
     fig, ax = plt.subplots()
-    ax.scatter(bvRAW,vRAW,c='k',s=0.1)
-    ax.scatter(bv,v,c="r",s=0.1)
-    #ax.scatter(bvhb,vhb,c='b',s=2)
+    ax.scatter(bvRAW, vRAW, c='k', s=0.1)
+    ax.scatter(bv, v, c="r", s=0.1)
     xplot = np.linspace(bv.min(),bv.max(),100001)
-    #x_array = np.linspace(-0.6,1.3,100)
     y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.2,0)
     ax.plot(xplot, y, "r-")
-    ax.vlines(x = -0.05, ymin = -4, ymax = 5)
-    #ax.plot(xplot,model_f(xplot,*popt),'r--')
-    #ax.set_xlim(-0.75,1.6)
-    ax.set_ylim(5,-4)
+    ax.vlines(x=-0.05, ymin=-4, ymax=5)
+    ax.set_ylim(5, -4)
     ax.set_xlabel('($B-V$)$_0$')
     ax.set_ylabel('$M_V$')
     ax.set_title("{} $E(B-V)$={:.2f} $(m-M)_0$={:.2f}".format(clusterName,ebv,distModulus))
     
-    fig.savefig('Plots/deRed/VvsBV_%s.png'%(clusterName,ext),bbox_inches='tight',dpi=300)
+    fig.savefig('Plots/deRed/VvsBV_%s_%s.png' % (clusterName, ext), bbox_inches='tight', dpi=300)
 
-def model_f(x,a,b,c,d,e,f,g,k):
-    x=x+k
+def model_f(x, a, b, c, d, e, f, g, k):
+    x = x+k
     return a*x**6+b*x**5+c*x**4+d*x**3+e*x**2+f*x+g
 
-def clusterFunc(dat,ebv,dist,rv=3.164,ru=4.985,rb=4.170, ri = 1.940):
+def clusterFunc(dat , ebv, dist, rv=3.164, ru=4.985, rb=4.170, ri=1.940):
     # Start with raw cluster data
     u = dat['col10']
     b = dat['col4']
@@ -549,14 +503,14 @@ def clusterFunc(dat,ebv,dist,rv=3.164,ru=4.985,rb=4.170, ri = 1.940):
     sharp = dat['col13']
     ra = dat2['col2']
     dec = dat2['col3']
+
     # Remove missing magnitudes and bad fits (chi^2 and sharp features also)
-    cond = np.logical_and.reduce((b<60,v<60, chi<3, abs(sharp)<0.5))
-    #cond = np.logical_and.reduce((b<60,v<60))
+    cond = np.logical_and.reduce((b < 60, v < 60, chi < 3, abs(sharp) < 0.5))
     ind = np.where(cond)[0]
 
     # De-redden the cluster
     u2, b2, v2, i2 = dereddening(u, b, v, i, ebv, ru, rb, rv, ri, dist)
-    bv = b2-v2 # Define a color
+    bv = b2-v2  # Define a color
     vi = v2-i2
     ub = u2-b2
     ubbv = (u2-b2)-(b2-v2)
@@ -575,7 +529,9 @@ def clusterFunc(dat,ebv,dist,rv=3.164,ru=4.985,rb=4.170, ri = 1.940):
     # UBVIplotBestFit(vi,ub,clusterName)
     # UBBVVIplotBestFit(vi,ubbv,clusterName)
     # BBVplotBestFit(bv,b2,clusterName)
-    DBSCANPlots(bv,v2,b2,u2,vi,ub,ubbv,clusterName, ind,dist,raClust,decClust,c,r_c,u,v,b,i,ebv,blueFlagArray, distModulus)
+    DBSCANPlots(bv, v2, b2, u2, vi, ub, ubbv, clusterName, ind, dist, raClust, decClust, c, r_c, u, v, b, i, ebv,
+                blueFlagArray, distModulus)
+
     # You're done for this cluster!
 
 def main():
@@ -583,7 +539,7 @@ def main():
     clusterFunc(dat, ebv, dist, rv=3.315,ru=5.231,rb=4.315, ri = 1.940)
     end = time.time()
     timeTaken = (end-start)
-    logging.info('Run successful, extension: {}, execution time: {:.2f}'.format(ext, timeTaken))
+    logging.info('Run successful, cluster: {}, extension: {}, execution time: {:.2f} seconds'.format(clusterName, ext, timeTaken))
     print("Execution time: ", timeTaken)
 
 
