@@ -147,11 +147,20 @@ def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, dec
 
     # HB Model Equation for use in plots and UVBright conditions
 
-    y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.05)  # VBV
-    y_u = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65, 0.8)  # UBV
+    VBVArgs = {'a': -3.74, 'b': 7.03, 'c': 6.83, 'd': -19.86, 'e': 8.98, 'f': -1.51, 'g': 0.35, 'k': 0.1}
+    UBVArgs = {'a': -3.74, 'b': 7.03, 'c': 6.83, 'd': -19.86, 'e': 8.98, 'f': -1.51, 'g': 1.65, 'k': 0.85}
+
+    y2 = model_f(bv[indAll], float(VBVArgs['a']), float(VBVArgs['b']), float(VBVArgs['c']), float(VBVArgs['d']),
+                 float(VBVArgs['e']), float(VBVArgs['f']), float(VBVArgs['g']), float(VBVArgs['k']))  # VBV
+    y_u = model_f(bv[indAll], float(UBVArgs['a']), float(UBVArgs['b']), float(UBVArgs['c']), float(UBVArgs['d']),
+                 float(UBVArgs['e']), float(UBVArgs['f']), float(UBVArgs['g']), float(UBVArgs['k']))  # UBV
+
+    with open(f'HBParams/VBV/HBParams_VBV_{clusterName}_{ext}', 'w') as HBArgs:
+        HBArgs.write(str(VBVArgs))
+    with open(f'HBParams/UBV/HBParams_UBV_{clusterName}_{ext}', 'w') as HBArgs:
+        HBArgs.write(str(UBVArgs))
 
     UVBrightCond = np.logical_and(v[indAll] < y2, bv[indAll] < -0.05)  # For VBV
-
     ############ RAW STAR MAG CMDS ######################
 
     bvRaw = bRaw - vRaw
@@ -232,7 +241,8 @@ def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, dec
     xplot = np.linspace(bv[indAll].min(), bv[indAll].max(), len(bv[indAll]))
     # x_array = np.linspace(-0.6,1.3,100)
     # y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35, -0.15)
-    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 0.35,0.05)
+    y = model_f(xplot, float(VBVArgs['a']), float(VBVArgs['b']), float(VBVArgs['c']), float(VBVArgs['d']),
+                float(VBVArgs['e']), float(VBVArgs['f']), float(VBVArgs['g']), float(VBVArgs['k']))
     ax.plot(xplot, y, "r-")
     ax.vlines(x=-0.05, ymin=-4, ymax=5)
     ax.scatter(bv[indAll][UVBrightCond],v[indAll][UVBrightCond],c='g',s=2)
@@ -302,7 +312,8 @@ def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, dec
     fig, ax = plt.subplots()
     ax.scatter(bv[indAll],u[indAll],c='k',s=0.1)
     xplot = np.linspace(bv[indAll].min(), bv[indAll].max(), len(bv[indAll]))
-    y = model_f(xplot, -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65,0.8)
+    y = model_f(xplot, float(UBVArgs['a']), float(UBVArgs['b']), float(UBVArgs['c']), float(UBVArgs['d']),
+                float(UBVArgs['e']), float(UBVArgs['f']), float(UBVArgs['g']), float(UBVArgs['k']))
     ax.plot(xplot, y, "r-")
     ax.vlines(x=-0.05, ymin=-4, ymax=5)
     # ax.plot(xplot,model_f(xplot,*popt),'r--')
