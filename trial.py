@@ -68,7 +68,8 @@ def dereddening(uinit,binit,vinit,iinit,ebv,ru,rb,rv,ri,dist_kpc):
 
 # Plots that need fitting
 
-def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, decClust, c, r_c, uRaw, vRaw, bRaw, iRaw, ebv, flagArray, distModulus):
+def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, decClust, c, r_c, uRaw, vRaw, bRaw, iRaw, ebv, flagArray, distModulus,
+                badPhotometryIndex):
     dat6 = pd.concat([dat5["pmra"],dat5["pmdec"]], axis="columns")
     fig, ax = plt.subplots()
     ax.scatter(dat6['pmra'], dat6['pmdec'], s = 0.1, marker="x")
@@ -104,33 +105,33 @@ def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, dec
     #indAll = np.arange(len(bv))
 
     # Cluster membership checks (within tidal radius, within 5 sigma of parallax, DBSCAN)
-
     clusterCore = coordTransfer(raClust, decClust)
-    angSep = arcMinAngularSep(clusterCore[0],clusterCore[1], dat2["col2"],dat2["col3"])
+    angSep = arcMinAngularSep(clusterCore[0], clusterCore[1], dat2["col2"],dat2["col3"])
     parStarErr, parDiff = parallaxError(dist)
     parCond = np.where(parDiff < 5*parStarErr)[0]
-    tidalRad = tidalRadius(c,r_c)
-    tidalCond = np.where(angSep<tidalRad)[0]
+    tidalRad = tidalRadius(c, r_c)
+    tidalCond = np.where(angSep < tidalRad)[0]
     indAll = np.intersect1d(indAll, tidalCond)
     indParSiegel = indSiegel[parCond]
     indAll = np.intersect1d(indAll, indParSiegel)
 
     # Getting non-members from membership tests (bad photometry rejects are in main())
 
-    counter = [] # Initialize list for reason for exclusion from cluster membership
+    counter = []  # Initialize list for reason for exclusion from cluster membership
 
     notInTidalRadCond = np.where(angSep>tidalRad)[0]
-    notInParCond = np.where(parDiff > 3*parStarErr)[0]
+    notInParCond = np.where(parDiff > 5*parStarErr)[0]
     notInParCond = indSiegel[notInParCond]
     notInClust = np.where(labels != 0)[0]
+    notInClust = indSiegel[notInClust]
 
-    nonMemberCond = np.concatenate((notInTidalRadCond, notInParCond, notInClust))
+    nonMemberCond = np.concatenate((notInTidalRadCond, notInParCond, notInClust, badPhotometryIndex))
     nonMemberCond = np.unique(nonMemberCond)
 
     notInClustSiegel = np.intersect1d(indSiegel, nonMemberCond)
 
     for star in notInClustSiegel:
-        if star not in cond:
+        if star in badPhotometryIndex:
             counter.append(0)
         elif star in notInClust:
             counter.append(1)
@@ -521,6 +522,7 @@ def clusterFunc(dat , ebv, dist, rv=3.164, ru=4.985, rb=4.170, ri=1.940):
     # Remove missing magnitudes and bad fits (chi^2 and sharp features also)
     cond = np.logical_and.reduce((b < 60, v < 60, chi < 3, abs(sharp) < 0.5))
     ind = np.where(cond)[0]
+    badPhotometry = np.where(cond==False)[0]
 
     # De-redden the cluster
     u2, b2, v2, i2 = dereddening(u, b, v, i, ebv, ru, rb, rv, ri, dist)
@@ -544,7 +546,7 @@ def clusterFunc(dat , ebv, dist, rv=3.164, ru=4.985, rb=4.170, ri=1.940):
     # UBBVVIplotBestFit(vi,ubbv,clusterName)
     # BBVplotBestFit(bv,b2,clusterName)
     DBSCANPlots(bv, v2, b2, u2, vi, ub, ubbv, clusterName, ind, dist, raClust, decClust, c, r_c, u, v, b, i, ebv,
-                blueFlagArray, distModulus)
+                blueFlagArray, distModulus, badPhotometry)
 
     # You're done for this cluster!
 
