@@ -117,6 +117,8 @@ def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, dec
 
     # Getting non-members from membership tests (bad photometry rejects are in main())
 
+    counter = [] # Initialize list for reason for exclusion from cluster membership
+
     notInTidalRadCond = np.where(angSep>tidalRad)[0]
     notInParCond = np.where(parDiff > 3*parStarErr)[0]
     notInParCond = indSiegel[notInParCond]
@@ -126,6 +128,18 @@ def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, dec
     nonMemberCond = np.unique(nonMemberCond)
 
     notInClustSiegel = np.intersect1d(indSiegel, nonMemberCond)
+
+    for star in notInClustSiegel:
+        if star not in cond:
+            counter.append(0)
+        elif star in notInClust:
+            counter.append(1)
+        elif star in notInTidalRadCond:
+            counter.append(2)
+        elif star in notInParCond:
+            counter.append(3)
+
+    counter = np.array(counter)
     ########################################
 
     # distModulus = 5*np.log10(dist*100)
@@ -349,7 +363,7 @@ def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, dec
     fileArray3 = np.rec.fromarrays([indexColumn1,coordArrayRA1,coordArrayDec1,bv[indAll],u[indAll],b[indAll],v[indAll],uRaw[indAll],bRaw[indAll],vRaw[indAll],iRaw[indAll],flagArray1])
     fileArray4 = np.rec.fromarrays([indexColumn2,coordArrayRA2,coordArrayDec2,bv[indAll][UVBrightCond1],u[indAll][UVBrightCond1],b[indAll][UVBrightCond1],v[indAll][UVBrightCond1],uRaw[indAll][UVBrightCond1],bRaw[indAll][UVBrightCond1],vRaw[indAll][UVBrightCond1],iRaw[indAll][UVBrightCond1],flagArray2])
     fileArray4 = np.array(fileArray4)
-    fileArray5 = np.rec.fromarrays([indexColumn3,coordArrayRA3,coordArrayDec3,bv[notInClustSiegel],u[notInClustSiegel],b[notInClustSiegel],v[notInClustSiegel],uRaw[notInClustSiegel],bRaw[notInClustSiegel],vRaw[notInClustSiegel], iRaw[notInClustSiegel]])
+    fileArray5 = np.rec.fromarrays([indexColumn3,coordArrayRA3,coordArrayDec3,bv[notInClustSiegel],u[notInClustSiegel],b[notInClustSiegel],v[notInClustSiegel],uRaw[notInClustSiegel],bRaw[notInClustSiegel],vRaw[notInClustSiegel], iRaw[notInClustSiegel], counter])
     fileArray5 = np.array(fileArray5)
 
     if len(fileArray2) != 0 and len(fileArray4) != 0:
@@ -366,7 +380,7 @@ def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, dec
     #infiles1 = np.savetxt("candStars/TSVs/%s_candStars_%s.dat"%(clusterName,ext),fileArray2, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
     infiles2 = np.savetxt("clusterMembers/%s_memberStars_%s.dat"%(clusterName,ext),fileArray3, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, (m-M)_0 = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
     #infiles3 = np.savetxt("candStars/TSVs/uBVCandStars/%s_uBVcandStars_%s.dat"%(clusterName,ext),fileArray4, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, m-M = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
-    infiles4 = np.savetxt("nonMembers/%s_nonMembers_%s.dat"%(clusterName, ext),fileArray5, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f", delimiter = "\t",header="{} E(B-V)={:.2f}, (m-M)_0 = {:.2f}\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI".format(clusterName,ebv, distModulus))
+    infiles4 = np.savetxt("nonMembers/%s_nonMembers_%s.dat"%(clusterName, ext),fileArray5, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, (m-M)_0 = {:.2f}\nReason Note: 0 -> Bad Photometry | 1 -> DBSCAN | 2 -> Tidal Radius | 3-> Parallax\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tReason".format(clusterName,ebv, distModulus))
     infiles5 = np.savetxt("candStars/candStarMasterList/%s_candStarsMaster_%s.dat"%(clusterName,ext),candStarMasterList, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter = "\t",header="{} E(B-V)={:.2f}, (m-M)_0 = {:.2f}\nBlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag".format(clusterName,ebv, distModulus))
 
     # OTHER CMD COMBINATIONS (not currently needed)
