@@ -70,7 +70,7 @@ def dereddening(uinit,binit,vinit,iinit,ebv,ru,rb,rv,ri,dist_kpc):
 
 def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, decClust, c, r_c, uRaw, vRaw, bRaw, iRaw, ebv, flagArray, distModulus,
                 badPhotometryIndex):
-    dat6 = pd.concat([dat5["pmra"],dat5["pmdec"]], axis="columns")
+    dat6 = pd.concat([dat5["pmra"],dat5["pmdec"]], axis="columns")  # Gaia PMRA matches for DBSCAN input
     fig, ax = plt.subplots()
     ax.scatter(dat6['pmra'], dat6['pmdec'], s = 0.1, marker="x")
     ax.set_title("Proper Motions")
@@ -145,7 +145,7 @@ def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, dec
 
     # distModulus = 5*np.log10(dist*100)
 
-    # HB Model Equation for use in plots and UVBright conditions
+    # HB Model Equation for use in plots and UVBright conditions (saved as .txt file for future reference)
 
     VBVArgs = {'a': -3.74, 'b': 7.03, 'c': 6.83, 'd': -19.86, 'e': 8.98, 'f': -1.51, 'g': 0.35, 'k': 0.1}
     UBVArgs = {'a': -3.74, 'b': 7.03, 'c': 6.83, 'd': -19.86, 'e': 8.98, 'f': -1.51, 'g': 1.65, 'k': 0.85}
@@ -155,12 +155,12 @@ def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, dec
     y_u = model_f(bv[indAll], float(UBVArgs['a']), float(UBVArgs['b']), float(UBVArgs['c']), float(UBVArgs['d']),
                  float(UBVArgs['e']), float(UBVArgs['f']), float(UBVArgs['g']), float(UBVArgs['k']))  # UBV
 
-    with open(f'HBParams/VBV/HBParams_VBV_{clusterName}_{ext}', 'w') as HBArgs:
+    with open(f'HBParams/VBV/HBParams_VBV_{clusterName}_{ext}.txt', 'w') as HBArgs:
         HBArgs.write(str(VBVArgs))
-    with open(f'HBParams/UBV/HBParams_UBV_{clusterName}_{ext}', 'w') as HBArgs:
+    with open(f'HBParams/UBV/HBParams_UBV_{clusterName}_{ext}.txt', 'w') as HBArgs:
         HBArgs.write(str(UBVArgs))
 
-    UVBrightCond = np.logical_and(v[indAll] < y2, bv[indAll] < -0.05)  # For VBV
+    UVBrightCond = np.logical_and(v[indAll] < y2, bv[indAll] < -0.05)  # For VBV candStars
     ############ RAW STAR MAG CMDS ######################
 
     bvRaw = bRaw - vRaw
@@ -287,7 +287,6 @@ def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, dec
     fig.savefig('Plots/DBSCAN/nonMemberPlots/UBV/UvsBV_%s_NM.png' % (clusterName), bbox_inches='tight', dpi=300)
     ##########################################IMPORTANT Non-Member CMDS#####################################################
 
-
     '''
     fig, ax = plt.subplots()
     ax.scatter(bv[indAll],b[indAll],c='k',s=0.1)
@@ -320,7 +319,7 @@ def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, dec
     # y2 = model_f(bv[indAll], -3.74, 7.03, 6.83, -19.86, 8.98, -1.51, 1.65,-0.01)
     #ax.plot(xplot, y, "r-")
     ax.vlines(x=-0.05, ymin=-3, ymax=4)
-    UVBrightCond1 = np.logical_and(u[indAll] < y_u, bv[indAll] < -0.05)
+    UVBrightCond1 = np.logical_and(u[indAll] < y_u, bv[indAll] < -0.05)  # For UBV candStars
     ax.scatter(bv[indAll][UVBrightCond1], u[indAll][UVBrightCond1], c='g', s=2)
     ax.set_title("{} $E(B-V)$={:.2f} $(m-M)_0$={:.2f}".format(clusterName, ebv, distModulus))
     ax.set_xlim(-0.75,1.3)
@@ -596,10 +595,10 @@ if __name__ == "__main__":
     r_c = float(locals()[clusterName]['r_c'])
     distModulus = float(locals()[clusterName]['harrisDistMod'])
 
-    dat = Table.read(clusterNameFile, format="ascii")
-    dat2 = Table.read(clusterGaiaFile, format="ascii")
+    dat = Table.read(clusterNameFile, format="ascii")  # Siegel File
+    dat2 = Table.read(clusterGaiaFile, format="ascii")  # Gaia New_Coor file
 
-    dat4 = pd.read_csv("GAIAData/{}".format(clusterGaiaResults))
+    dat4 = pd.read_csv("GAIAData/{}".format(clusterGaiaResults))  # Gaia DR3 Matches file
     dat4 = dat4.fillna(1000)
 
     unID, indexes, inverse, counts = np.unique(dat4[f"{clusterName.lower()}_oid"],
@@ -644,6 +643,7 @@ if __name__ == "__main__":
     oids = pd.DataFrame(dat4[f"{clusterName.lower()}_oid"][indexKeep])
     parallaxGaia = pd.DataFrame(dat4["parallax"][indexKeep])
     parallaxErrorGaia = pd.DataFrame(dat4["parallax_error"][indexKeep])
-    dat5 = pd.concat([PMRA, PMDEC, oids, parallaxGaia, parallaxErrorGaia], axis="columns")
+    dat5 = pd.concat([PMRA, PMDEC, oids, parallaxGaia,
+                      parallaxErrorGaia], axis="columns")  # Gaia matches with some columns
 
     main()
