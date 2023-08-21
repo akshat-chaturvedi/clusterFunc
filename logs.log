@@ -42,3 +42,8 @@ INFO (04/08/2023 05:29:56 PM): Run successful, cluster: M14, extension: 5Sigma, 
 INFO (04/08/2023 05:31:38 PM): Run successful, cluster: M14, extension: 5Sigma, execution time: 2.59 seconds (Line: 565 [trial.py])
 INFO (04/08/2023 05:34:55 PM): Run successful, cluster: M14, extension: 5Sigma, execution time: 2.59 seconds (Line: 566 [trial.py])
 INFO (04/08/2023 05:38:36 PM): Run successful, cluster: M14, extension: 5Sigma, execution time: 2.63 seconds (Line: 571 [trial.py])
+INFO (18/08/2023 10:16:16 AM): Run successful, cluster: M9, extension: 5Sigma, execution time: 2.62 seconds (Line: 568 [trial.py])
+INFO (18/08/2023 10:16:36 AM): Run successful, cluster: M9, extension: 5Sigma, execution time: 2.63 seconds (Line: 568 [trial.py])
+INFO (18/08/2023 10:16:50 AM): Run successful, cluster: M9, extension: 5Sigma, execution time: 2.60 seconds (Line: 568 [trial.py])
+INFO (18/08/2023 10:17:06 AM): Run successful, cluster: M9, extension: 5Sigma, execution time: 2.60 seconds (Line: 568 [trial.py])
+INFO (18/08/2023 10:17:39 AM): Run successful, cluster: M9, extension: 5Sigma, execution time: 2.60 seconds (Line: 568 [trial.py])
