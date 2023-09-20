@@ -147,8 +147,8 @@ def DBSCANPlots(bv, v, b, u, vi, ub, ubbv, clusterName, cond, dist, raClust, dec
 
     # HB Model Equation for use in plots and UVBright conditions (saved as .txt file for future reference)
 
-    VBVArgs = {'a': -3.74, 'b': 7.03, 'c': 6.83, 'd': -19.86, 'e': 8.98, 'f': -1.51, 'g': 0.35, 'k': 0.0}
-    UBVArgs = {'a': -3.74, 'b': 7.03, 'c': 6.83, 'd': -19.86, 'e': 8.98, 'f': -1.51, 'g': 1.65, 'k': 0.75}
+    VBVArgs = {'a': -3.74, 'b': 7.03, 'c': 6.83, 'd': -19.86, 'e': 8.98, 'f': -1.51, 'g': 0.35, 'k': -0.05}
+    UBVArgs = {'a': -3.74, 'b': 7.03, 'c': 6.83, 'd': -19.86, 'e': 8.98, 'f': -1.51, 'g': 1.65, 'k': 0.2}
 
     y2 = model_f(bv[indAll], float(VBVArgs['a']), float(VBVArgs['b']), float(VBVArgs['c']), float(VBVArgs['d']),
                  float(VBVArgs['e']), float(VBVArgs['f']), float(VBVArgs['g']), float(VBVArgs['k']))  # VBV

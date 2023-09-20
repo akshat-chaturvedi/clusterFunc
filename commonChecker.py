@@ -3,6 +3,7 @@ import pandas as pd
 from astropy.table import Table
 import matplotlib.pyplot as plt
 import logging
+import glob
 
 # logging.basicConfig(filename='logs.log',
 #                     encoding='utf-8',
@@ -68,9 +69,8 @@ import logging
 # print(moo)
 
 # df2 = Table.read("nonMembers/M14_nonMembers_testing123.dat", format="ascii", delimiter="\s")
-df3 = Table.read("clusterMembers/M9_memberStars_5Sigma.dat", format="ascii", delimiter="\s")
-
-
+df3 = Table.read("clusterMembers/M14_memberStars_5Sigma.dat", format="ascii", delimiter="\s")
+# print(df3)
 
 vRaw = df3['col14']
 B = df3['col13']
@@ -82,13 +82,10 @@ u = df3['col9']
 # i = df2['col11']
 bv = b-v
 # vi = v-i
-
-arr = [1226, 1459]
-print(df3[arr])
-
-
 # print(df2)
 
+arr = [ 648, 1339, 1387, 1743, 2078, 2551]
+# print(df3[arr])
 # if (vi[1543] > 0.331+1.444*bv[1543]):
 #     print(0)
 #     logging.error('Run unsuccessful')
@@ -96,7 +93,7 @@ print(df3[arr])
 #     print(1)
 #     logging.info('Run successful')
 
-lst1 = [10001,9243,8956,8812,8119,7645,7386,7075,6897,6908,6682,6458,6395,6215,5262,5212,5096,4987,4562,3006,1320]
+# lst1 = [10001,9243,8956,8812,8119,7645,7386,7075,6897,6908,6682,6458,6395,6215,5262,5212,5096,4987,4562,3006,1320]
 
 # print(df2['col1'])
 
@@ -123,7 +120,7 @@ def model_f(x,a,b,c,d,e,f,g,k):
 
 
 # arr = [301, 323, 363]
-arr = [1226, 1459]
+# arr = [1226, 1459]
 
 fig, ax = plt.subplots()
 ax.scatter(bvRaw, vRaw, c='k', s=0.1)
@@ -138,5 +135,13 @@ ax.set_xlim(-0.75, 1.6)
 ax.set_ylim(22,12)
 ax.set_xlabel('$B-V$')
 ax.set_ylabel('$V$')
-plt.show()
+# plt.show()
 
+a = glob.glob('*phot')
+b = []
+for item in a:
+    b.append(item.split('.')[0])
+
+for item in b:
+    with open('clusterNameList.md', 'a') as f:
+        f.write('-' + ' ' + '[ ]' + ' ' + item + '  ' + '\n')
