@@ -46,6 +46,6 @@ def tidalRadius(c, r_c):
     return tidalRad
 
 def HB_model(x, a, b, c, d, e, f, g, k):
-    # TODO: add comments describing what changing each of the parameters here actually does vis-a-vis moving the HB
+    # g moves the curve up or down (-ve value moves it up), k moves the graph left or right (+ve moves it blueward)
     x = x+k
     return a*x**6+b*x**5+c*x**4+d*x**3+e*x**2+f*x+g
