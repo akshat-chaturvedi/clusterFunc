@@ -233,9 +233,9 @@ class GCAnalyzer:
             print("-->Optimal horizontal branch model parameters not found")
             defaultHBQuery = input("-->Use default (M 79) parameters? [Y/N]")  # Defaults to M79 parameters
             if defaultHBQuery in ["Y", "y", ""]:
-                with open(f"HBParams/UBV/HBParams_UBV_M79", 'r') as f:
+                with open(f"HBParams/UBV/HBParams_UBV_M79.json", 'r') as f:
                     self.UBV_HBParams = json.load(f)
-                with open(f"HBParams/VBV/HBParams_VBV_M79", 'r') as f:
+                with open(f"HBParams/VBV/HBParams_VBV_M79.json", 'r') as f:
                     self.VBV_HBParams = json.load(f)
             else:
                 exit("Analysis Ended")
