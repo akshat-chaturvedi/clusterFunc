@@ -18,14 +18,37 @@ class GCDBSCAN:
 
     def PMPlots(self):
         # Plots proper motion plots for each cluster from Gaia matches
-        fig, ax = plt.subplots()
-        ax.scatter(self.data['pmra'], self.data['pmdec'], s=0.1, marker="x")
-        ax.set_title("Proper Motions")
+        # fig, ax = plt.subplots()
+        fig = plt.figure(figsize=(6, 6))
+        gs = fig.add_gridspec(2, 2, width_ratios=(4, 1), height_ratios=(1, 4),
+                              left=0.1, right=0.95, bottom=0.1, top=0.95,
+                              wspace=0.1, hspace=0.1)
+        ax = fig.add_subplot(gs[1, 0])
+        ax_histx = fig.add_subplot(gs[0, 0], sharex=ax)
+        ax_histy = fig.add_subplot(gs[1, 1], sharey=ax)
+
+        ax.scatter(self.data['pmra'], self.data['pmdec'], s=0.1, marker="x", color="k")
+        # ax.set_title("Proper Motions")
         ax.set_xlabel("pmra [mas yr$^{-1}$]")
         ax.set_ylabel("pmdec [mas yr$^{-1}$]")
-        ax.set_xlim(-20, 15)
+        ax.set_xlim(-15, 15)
         ax.set_ylim(-15, 15)
-        fig.savefig(f"PMPlots/{self.clusterName}_{self.extension}.jpg", bbox_inches="tight", dpi=300)
+        ax.text(16,20, f"{self.clusterName}", fontsize=16)
+        ax.text(16,18, "Proper Motions", fontsize=10)
+
+        ax_histx.tick_params(axis="x", labelbottom=False)
+        ax_histy.tick_params(axis="y", labelleft=False)
+
+        # now determine nice limits by hand:
+        binwidth = 0.4
+        xymax = max(np.max(np.abs(self.data['pmra'])), np.max(np.abs(self.data['pmdec'])))
+        lim = (int(xymax / binwidth) + 1) * binwidth
+
+        bins = np.arange(-lim, lim + binwidth, binwidth)
+        ax_histx.hist(self.data['pmra'], bins=bins, color="k")
+        ax_histy.hist(self.data['pmdec'], bins=bins, orientation='horizontal', color="k")
+
+        fig.savefig(f"PMPlots/{self.clusterName}_{self.extension}.pdf", dpi=300, bbox_inches="tight")
 
     def clusters(self):
         if os.path.exists(f"DBSCANParams/{self.clusterName}_{self.extension}.json"):
