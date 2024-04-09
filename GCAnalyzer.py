@@ -191,7 +191,7 @@ class GCAnalyzer:
         self.indAll = np.intersect1d(self.indAll1, tidalCond)
         indParSiegel = self.indSiegel[parCond]
         self.indAll = np.intersect1d(self.indAll, indParSiegel)  # Get combined index of members
-        # TODO: Check if re-defining indall here as well as in the unique matches function breaks this
+
 
         # Getting non-members from membership tests (bad photometry rejects are in dataCleaner method)
 
