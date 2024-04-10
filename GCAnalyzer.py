@@ -379,8 +379,8 @@ class GCAnalyzer:
             print("---->Non-member CMDs plotted")
 
             print("-->CMD plotting completed")
-        except:
-            exit("Error in plotting CMDs")
+        except Exception as e:
+            exit(f"Error in plotting CMDs: {e}")
 
         self.UVBrightRA_VBV = self.gaia_coords_data["col2"][self.indAll][self.UVBrightCond_VBV]
         self.UVBrightDec_VBV = self.gaia_coords_data["col3"][self.indAll][self.UVBrightCond_VBV]

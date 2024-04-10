@@ -1,4 +1,0 @@
-# Rup106 E(B-V)=0.20, m-M = 16.63
-# BlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0
-# 	RA		Dec		(B-V)_0	M_u	M_B	M_V	u	B	V	I	BlueFlag
-1164	12 38 47.695	-51 12 04.91	0.85	1.81	0.69	-0.16	19.4844	18.1142	17.1099	15.9008	1
