@@ -35,10 +35,10 @@ class Comparer:
 
         baumgardtChecklist = []
         for i in probabilityList:
-            if len(i) > 0 and min(i) > 0.5:
+            if len(i) > 0 and max(i) > 0.5:
                 baumgardtChecklist.append(1)
             else:
-                baumgardtChecklist.append(1)
+                baumgardtChecklist.append(0)
 
         return np.array(baumgardtChecklist)
 
