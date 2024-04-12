@@ -7,9 +7,12 @@ class GaiaQuerier:
         self.clusterName = clusterName
 
         dotenv.load_dotenv('.env')
-        print("---->Gaia credentials found")
+        try:
+            Gaia.login(user=os.getenv("GAIA_USERID"), password=os.getenv("GAIA_PASSWORD"))
+            print("---->Gaia credentials found")
 
-        Gaia.login(user=os.getenv("GAIA_USERID"), password=os.getenv("GAIA_PASSWORD"))
+        except:
+            pass
 
         job = Gaia.upload_table(upload_resource=f"gData/{self.clusterName}.csv",
                                 table_name=f"{self.clusterName.lower()}",
