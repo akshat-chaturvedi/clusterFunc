@@ -192,4 +192,8 @@ clusterProperties = {
               'mv': -5.73, 'harrisDistMod': 18.63},
     'Rup106': {'dist': 21.2, 'ebv': 0.20, 'ra': "12 38 40.20", 'dec': "-51 09 01.0", 'c': 0.70, 'r_c': 1.00,
                'bh': -0.82,
-               'mv': -6.35, 'harrisDistMod': 17.25}, }
+               'mv': -6.35, 'harrisDistMod': 17.25},
+    'E3': {'dist': 9.1, 'ebv': 0.30, 'ra': "09 20 57.07", 'dec': "-77 16 54.8", 'c': 0.75, 'r_c': 1.87,
+           'bh': -9.99,
+           'mv': -4.12, 'harrisDistMod': 15.47},
+}

@@ -260,15 +260,15 @@ class GCAnalyzer:
 
             # UV Bright conditions for V vs B-V and u vs B-V CMDs. These use the *dereddened* values
             self.UVBrightCond_VBV = np.logical_and(self.dered_v[self.indAll] < HB_VBV,
-                                                   self.dered_bv[self.indAll] < -0.05)
+                                                   self.dered_bv[self.indAll] < 0.0)
             self.UVBrightCond_UBV = np.logical_and(self.dered_u[self.indAll] < HB_UBV,
-                                                   self.dered_bv[self.indAll] < -0.05)
+                                                   self.dered_bv[self.indAll] < 0.0)
 
             # The following CMDs are made using the observed magnitudes and colors, not the dereddened ones
             # V vs B-V Plot
             fig, ax = plt.subplots()
             ax.scatter(self.bv[self.indAll], self.v[self.indAll], c='k', s=0.1)
-            ax.vlines(x=-0.05, ymin=-4, ymax=5)
+            ax.vlines(x=0, ymin=-4, ymax=5)
             ax.scatter(self.bv[self.indAll][self.UVBrightCond_VBV], self.v[self.indAll][self.UVBrightCond_VBV], c='g',
                        s=2)
             ax.set_title(f"{self.clusterName} $E(B-V)$={self.ebv:.2f} $(m-M)_0$={self.distModulus:.2f}", fontsize=16)
@@ -284,7 +284,7 @@ class GCAnalyzer:
             # u vs B-V Plot
             fig, ax = plt.subplots()
             ax.scatter(self.bv[self.indAll], self.u[self.indAll], c='k', s=0.1)
-            ax.vlines(x=-0.05, ymin=-4, ymax=5)
+            ax.vlines(x=0, ymin=-4, ymax=5)
             ax.scatter(self.bv[self.indAll][self.UVBrightCond_UBV], self.u[self.indAll][self.UVBrightCond_UBV], c='g',
                        s=2)
             ax.set_title(f"{self.clusterName} $E(B-V)$={self.ebv:.2f} $(m-M)_0$={self.distModulus:.2f}", fontsize=16)
@@ -310,7 +310,7 @@ class GCAnalyzer:
                                     float(self.VBV_HBParams['e']),
                                     float(self.VBV_HBParams['f']), float(self.VBV_HBParams['g']),
                                     float(self.VBV_HBParams['k'])), "r-")
-            ax.vlines(x=-0.05, ymin=-4, ymax=5)
+            ax.vlines(x=0, ymin=-4, ymax=5)
             ax.scatter(self.dered_bv[self.indAll][self.UVBrightCond_VBV],
                        self.dered_v[self.indAll][self.UVBrightCond_VBV],
                        c='g', s=2)
@@ -332,8 +332,8 @@ class GCAnalyzer:
                                     float(self.UBV_HBParams['e']),
                                     float(self.UBV_HBParams['f']), float(self.UBV_HBParams['g']),
                                     float(self.UBV_HBParams['k'])), "r-")
-            ax.vlines(x=-0.05, ymin=-4, ymax=5)
-            ax.vlines(x=-0.05, ymin=-3, ymax=4)
+            ax.vlines(x=0, ymin=-4, ymax=5)
+            ax.vlines(x=0, ymin=-3, ymax=4)
             ax.scatter(self.dered_bv[self.indAll][self.UVBrightCond_UBV],
                        self.dered_u[self.indAll][self.UVBrightCond_UBV],
                        c='g', s=2)
