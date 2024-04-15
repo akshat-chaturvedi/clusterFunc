@@ -497,14 +497,17 @@ class GCAnalyzer:
                    fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter="\t",
                    header=f"{self.clusterName} E(B-V)={self.ebv:.2f}, (m-M)_0 = {self.distModulus:.2f}\nBlueFlag "
                           f"Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then"
-                          "BlueFlag = 0. Value of 1 is good.\n\tRA\t\tDec\t\t(B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag")
+                          "BlueFlag = 0. Value of 1 is good.\n"
+                          f"File Created: {datetime.now().strftime('%m/%d/%Y')} (MM/DD/YYYY)\n\tRA\t\tDec\t\t("
+                          f"B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag")
         print("---->Member stars file saved")
 
         np.savetxt(f"nonMembers/{self.clusterName}_nonMembers_{self.extension}", fileArray5,
                    fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter="\t",
                    header=f"{self.clusterName} E(B-V)={self.ebv:.2f}, (m-M)_0 = {self.distModulus:.2f}\nReason Note: "
                           f"0 -> Bad Photometry | 1 -> DBSCAN | 2 ->"
-                          "Tidal Radius | 3-> Parallax\n\tRA\t\tDec\t\t("
+                          "Tidal Radius | 3-> Parallax\n"
+                          f"File Created: {datetime.now().strftime('%m/%d/%Y')} (MM/DD/YYYY)\n\tRA\t\tDec\t\t("
                           "B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tReason")
         print("---->Non-member stars file saved")
 
@@ -513,7 +516,8 @@ class GCAnalyzer:
                    delimiter="\t",
                    header=f"{self.clusterName} E(B-V)={self.ebv:.2f}, (m-M)_0 = {self.distModulus:.2f}\nBlueFlag "
                           f"Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then"
-                          "BlueFlag = 0. Value of 1 is good.\n\tRA\t\tDec\t\t("
+                          "BlueFlag = 0. Value of 1 is good.\n"
+                          f"File Created: {datetime.now().strftime('%m/%d/%Y')} (MM/DD/YYYY)\n\tRA\t\tDec\t\t("
                           "B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag")
         print("---->Candidate stars file saved")
 
@@ -526,7 +530,7 @@ class GCAnalyzer:
             UVBright_Coords = list(zip(UVBrightRA, np.unique(UVBrightDec)))
 
             probFinder = Comparer(self.clusterName, UVBright_Coords)
-            self.probList = probFinder.separationFinder()  # The probability of a star being a member from MNRAS, 505, 5978
+            self.probList = probFinder.separationFinder()  # Probability of a star being a member from MNRAS, 505, 5978
 
             UVBrightCoordRA = []
             UVBrightCoordDec = []
@@ -553,8 +557,10 @@ class GCAnalyzer:
                        delimiter="\t",
                        header=f"{self.clusterName} E(B-V)={self.ebv:.2f}, (m-M)_0 = {self.distModulus:.2f}\nBlueFlag "
                               f"Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then"
-                              "BlueFlag = 0. Value of 1 is good.\nNote: if BaumgardtCheck = 1, then there is atleast 1 member star within 3\" "
-                              "of the candidate star in the cluster V&B21\n\tRA\t\tDec\t\t("
+                              "BlueFlag = 0. Value of 1 is good.\nNote: if BaumgardtCheck = 1, then there is atleast "
+                              "1 member star within 3\""
+                              "of the candidate star in the cluster V&B21\n"
+                              f"File Created: {datetime.now().strftime('%m/%d/%Y')} (MM/DD/YYYY)\n\tRA\t\tDec\t\t("
                               "B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag\tBaumgardtCheck")
             print("---->Candidate stars with probabilities file saved")
 
