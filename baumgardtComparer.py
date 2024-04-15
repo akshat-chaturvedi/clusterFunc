@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from astropy.coordinates import SkyCoord
+from scipy.spatial import cKDTree
 import astropy.units as u
 from tqdm import tqdm
 
@@ -11,23 +12,22 @@ class Comparer:
                                          header=None)
         baumgardtRA = self.baumgardtData[1]
         baumgardtDec = self.baumgardtData[2]
-        self.baumgardtCoords = list(zip(baumgardtRA, baumgardtDec))
+        self.baumgardtCoords = np.column_stack((baumgardtRA, baumgardtDec))
+        self.baumgardtTree = cKDTree(self.baumgardtCoords)
         self.candidateList = candStarCoordinates
 
     def separationFinder(self):
         cadidateStarCoords = [SkyCoord(ra=ra * u.deg, dec=dec * u.deg) for ra, dec in self.candidateList]
-        baumgardtCoords = [SkyCoord(ra=ra * u.deg, dec=dec * u.deg) for ra, dec in self.baumgardtCoords]
 
         radius = 3 * u.arcsec
         matched_indices = []
+
         print("-->Comparing memberships to Vasiliev & Baumgardt (2021)")
         for coord_x in tqdm(cadidateStarCoords):
-            matched_indices_for_x = []
-            for i, coord_b in enumerate(baumgardtCoords):
-                separation = coord_x.separation(coord_b)
-                if separation <= radius:
-                    matched_indices_for_x.append(i)
-            matched_indices.append(matched_indices_for_x)
+            coord_x_deg = [coord_x.ra.deg, coord_x.dec.deg]
+            # Query the KD-tree for nearby coordinates
+            nearby_indices = self.baumgardtTree.query_ball_point(coord_x_deg, radius.to_value(u.deg))
+            matched_indices.append(nearby_indices)
 
         probabilityList = []
         for ind in matched_indices:
