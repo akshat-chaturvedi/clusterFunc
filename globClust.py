@@ -2,6 +2,8 @@ from GCAnalyzer import GCAnalyzer
 import logging
 import os
 import datetime
+import pandas as pd
+import matplotlib.pyplot as plt
 
 def get_file_creation_date(cluster_name):
     file_name = f"candStars/candStarsWithProbs/{cluster_name}_candStarsWithProb_April.dat"
@@ -11,17 +13,7 @@ def get_file_creation_date(cluster_name):
     else:
         return None
 
-
-def main():
-    a = GCAnalyzer()
-    a.dataCleaner()
-    a.dereddening()
-    a.uniqueMatches()
-    a.clusterMembershipChecks()
-    a.HBParams()
-    a.CMDPlotter()
-    a.dataSaver()
-
+def inventoryChecker():
     file_path = "goodClusters.txt"
 
     with open(file_path, "r") as file:
@@ -42,6 +34,71 @@ def main():
         file.write("\n".join(modified_names))
 
     print("Cluster names have been checked and modified.")
+
+
+def candStarPlotter():
+    data_dir = 'candStars/candStarsWithProbs'
+
+    # Columns you want to extract
+    column1_name = 3
+    column2_name = 4
+    column3_name = 6
+
+    # Lists to store column values
+    column1_values = []
+    column2_values = []
+    column3_values = []
+
+    # Loop through each file in the directory
+    for filename in os.listdir(data_dir):
+        if filename.endswith('.dat'):
+            file_path = os.path.join(data_dir, filename)
+
+            # Read the CSV file
+            df = pd.read_csv(file_path, sep="\t", skiprows=5, header=None)
+
+            column1_values.extend(df[column1_name].tolist())
+            column2_values.extend(df[column2_name].tolist())
+            column3_values.extend(df[column3_name].tolist())
+
+    # V vs B-V Plot
+    fig, ax = plt.subplots()
+    ax.scatter(column1_values, column3_values, c='k', s=1)
+    ax.set_xlim(-1.1, 0.1)
+    ax.set_ylim(7, -5)
+    ax.set_xlabel('($B-V$)$_0$', fontsize=14)
+    ax.set_ylabel('M$_V$', style="italic", fontsize=14)
+    plt.tick_params(axis='y', which='major', labelsize=14)
+    plt.tick_params(axis='x', which='major', labelsize=14)
+    ax.set_title(f"Candidate Stars", fontsize=16)
+    fig.savefig(f'Plots/DBSCAN/candStarPlots/candStars_VBV.pdf', bbox_inches='tight', dpi=300)
+
+    # u vs B-V Plot
+    fig, ax = plt.subplots()
+    ax.scatter(column1_values, column2_values, c='k', s=1)
+    ax.set_xlim(-1.1, 0.1)
+    ax.set_ylim(7, -5)
+    ax.set_xlabel('($B-V$)$_0$', fontsize=14)
+    ax.set_ylabel('M$_u$', style="italic", fontsize=14)
+    plt.tick_params(axis='y', which='major', labelsize=14)
+    plt.tick_params(axis='x', which='major', labelsize=14)
+    ax.set_title(f"Candidate Stars", fontsize=16)
+    fig.savefig(f'Plots/DBSCAN/candStarPlots/candStars_UBV.pdf', bbox_inches='tight', dpi=300)
+    print(f"Candidate Star CMDs plotted")
+
+
+def main():
+    a = GCAnalyzer()
+    a.dataCleaner()
+    a.dereddening()
+    a.uniqueMatches()
+    a.clusterMembershipChecks()
+    a.HBParams()
+    a.CMDPlotter()
+    a.dataSaver()
+
+    inventoryChecker()
+    candStarPlotter()
 
 
 if __name__ == "__main__":
