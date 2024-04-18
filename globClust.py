@@ -3,6 +3,7 @@ import logging
 import os
 import datetime
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
 def get_file_creation_date(cluster_name):
@@ -43,11 +44,13 @@ def candStarPlotter():
     column1_name = 3
     column2_name = 4
     column3_name = 6
+    column4_name = 12
 
     # Lists to store column values
     column1_values = []
     column2_values = []
     column3_values = []
+    column4_values = []
 
     # Loop through each file in the directory
     for filename in os.listdir(data_dir):
@@ -60,10 +63,18 @@ def candStarPlotter():
             column1_values.extend(df[column1_name].tolist())
             column2_values.extend(df[column2_name].tolist())
             column3_values.extend(df[column3_name].tolist())
+            column4_values.extend(df[column4_name].tolist())
+
+    column1_values = np.array(column1_values)
+    column2_values = np.array(column2_values)
+    column3_values = np.array(column3_values)
+    column4_values = np.array(column4_values)
+    ind = np.where(column4_values == 1)[0]
 
     # V vs B-V Plot
     fig, ax = plt.subplots()
-    ax.scatter(column1_values, column3_values, c='k', s=1)
+    ax.scatter(column1_values[ind], column3_values[ind], facecolors="none", edgecolor='g', s=30, label="V&B21 Matches")
+    ax.scatter(column1_values, column3_values, c='k', s=1, label="Candidate Stars")
     ax.set_xlim(-1.1, 0.1)
     ax.set_ylim(7, -5)
     ax.set_xlabel('($B-V$)$_0$', fontsize=14)
@@ -71,11 +82,13 @@ def candStarPlotter():
     plt.tick_params(axis='y', which='major', labelsize=14)
     plt.tick_params(axis='x', which='major', labelsize=14)
     ax.set_title(f"Candidate Stars", fontsize=16)
+    ax.legend(loc="upper left")
     fig.savefig(f'Plots/DBSCAN/candStarPlots/candStars_VBV.pdf', bbox_inches='tight', dpi=300)
 
     # u vs B-V Plot
     fig, ax = plt.subplots()
-    ax.scatter(column1_values, column2_values, c='k', s=1)
+    ax.scatter(column1_values[ind], column2_values[ind], facecolors="none", edgecolor='g', s=30, label="V&B21 Matches")
+    ax.scatter(column1_values, column2_values, c='k', s=1, label="Candidate Stars")
     ax.set_xlim(-1.1, 0.1)
     ax.set_ylim(7, -5)
     ax.set_xlabel('($B-V$)$_0$', fontsize=14)
@@ -83,6 +96,7 @@ def candStarPlotter():
     plt.tick_params(axis='y', which='major', labelsize=14)
     plt.tick_params(axis='x', which='major', labelsize=14)
     ax.set_title(f"Candidate Stars", fontsize=16)
+    ax.legend(loc="upper left")
     fig.savefig(f'Plots/DBSCAN/candStarPlots/candStars_UBV.pdf', bbox_inches='tight', dpi=300)
     print(f"Candidate Star CMDs plotted")
 
