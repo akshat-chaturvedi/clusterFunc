@@ -4,7 +4,7 @@ from astropy.table import Table
 import pandas as pd
 from PyAstronomy import pyasl
 from clusterProps import clusterProperties as CP
-from GaiaQuerier import GaiaQuerier
+# from GaiaQuerier import GaiaQuerier
 from GMagCalculator import GMagFinder
 from GCDBSCAN import GCDBSCAN
 from datetime import datetime
@@ -79,7 +79,7 @@ class GCAnalyzer:
             makeQuery = input("-->Gaia DR3 matches file not found. Make Gaia Archive query for this cluster? [Y/N]")
             if makeQuery in ["Y", "y", ""]:
                 print("-->Gaia DR3 Querying Started")
-                GaiaQuerier(self.clusterName)
+                # GaiaQuerier(self.clusterName)
             else:
                 exit("Analysis Ended")
 
@@ -522,14 +522,14 @@ class GCAnalyzer:
         print("---->Candidate stars file saved")
 
         if os.path.exists(f"candStars/candStarsWithProbs/{self.clusterName}_candStarsWithProb_{self.extension}.dat"):
-            print("---->V&B21 Comaprison Data Found!")
+            print("---->V&B21 Comparison Data Found!")
         else:
             UVBrightRA = np.unique(np.append(np.array(self.UVBrightRA_VBV), np.array(self.UVBrightRA_UBV)))
             UVBrightDec = np.unique(np.append(np.array(self.UVBrightDec_VBV), np.array(self.UVBrightDec_UBV)))
 
             UVBright_Coords = list(zip(UVBrightRA, np.unique(UVBrightDec)))
 
-            probFinder = Comparer(self.clusterName, UVBright_Coords)
+            probFinder = Comparer(self.clusterName, UVBright_Coords, self.b[uniqueInd], self.v[uniqueInd])
             self.probList = probFinder.separationFinder()  # Probability of a star being a member from MNRAS, 505, 5978
 
             UVBrightCoordRA = []

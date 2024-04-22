@@ -6,10 +6,13 @@ import astropy.units as u
 from tqdm import tqdm
 
 class Comparer:
-    def __init__(self, clusterName, candStarCoordinates):
+    def __init__(self, clusterName, candStarCoordinates, bMagnitude, vMagnitude):
         self.clusterName = clusterName
         self.baumgardtData = pd.read_csv(f"BaumgardtTables/{self.clusterName}.txt", sep="\t",
                                          header=None)
+        self.b = bMagnitude
+        self.v = vMagnitude
+        self.g = self.v - 0.0124*(self.b-self.v)
         baumgardtRA = self.baumgardtData[1]
         baumgardtDec = self.baumgardtData[2]
         self.baumgardtCoords = np.column_stack((baumgardtRA, baumgardtDec))
@@ -30,12 +33,25 @@ class Comparer:
             matched_indices.append(nearby_indices)
 
         probabilityList = []
+        gMagnitudeList = []
         for ind in matched_indices:
-            probabilityList.append(self.baumgardtData[16][ind])
+            probabilityList.append(self.baumgardtData[16][ind].values)
+            gMagnitudeList.append(self.baumgardtData[12][ind].values)
 
+        gMagnitudeList = np.array(gMagnitudeList)
+        # breakpoint()
+        gMagDiff = []
+        for i in range(len(gMagnitudeList)):
+            if len(gMagnitudeList[i]) > 0:
+                gMagDiff.append(abs(self.g[i] - gMagnitudeList[i]))
+            else:
+                gMagDiff.append(-9.99)
+
+        print(gMagDiff)
+        breakpoint()
         baumgardtChecklist = []
-        for i in probabilityList:
-            if len(i) > 0 and max(i) > 0.5:
+        for i in range(len(probabilityList)):
+            if len(probabilityList[i]) > 0 and max(probabilityList[i]) > 0.5 > min(np.array(gMagDiff)[i]):
                 baumgardtChecklist.append(1)
             else:
                 baumgardtChecklist.append(0)
