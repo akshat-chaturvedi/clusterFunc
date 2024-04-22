@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.table import Table
 import pandas as pd
-from PyAstronomy import pyasl
 from clusterProps import clusterProperties as CP
 # from GaiaQuerier import GaiaQuerier
 from GMagCalculator import GMagFinder
@@ -222,12 +221,12 @@ class GCAnalyzer:
 
     def HBParams(self):
         # This function sets the HB model parameters. To change the parameters, change the .json file directly
-        HBParamsPath = f"HBParams/UBV/HBParams_UBV_{self.clusterName}_{self.extension}.json"
+        HBParamsPath = f"HBParams/UBV/HBParams_UBV_{self.clusterName}.json"
         if os.path.exists(HBParamsPath):
             print("-->Optimal horizontal branch model parameters found")
-            with open(f"HBParams/UBV/HBParams_UBV_{self.clusterName}_{self.extension}.json", 'r') as f:
+            with open(f"HBParams/UBV/HBParams_UBV_{self.clusterName}.json", 'r') as f:
                 self.UBV_HBParams = json.load(f)
-            with open(f"HBParams/VBV/HBParams_VBV_{self.clusterName}_{self.extension}.json", 'r') as f:
+            with open(f"HBParams/VBV/HBParams_VBV_{self.clusterName}.json", 'r') as f:
                 self.VBV_HBParams = json.load(f)
         else:
             print("-->Optimal horizontal branch model parameters not found")
@@ -406,28 +405,24 @@ class GCAnalyzer:
         coordArrayDec_NM = []
 
         for i in range(0, len(self.UVBrightRA_VBV)):
-            sexa = pyasl.coordsDegToSexa(self.UVBrightRA_VBV[i], self.UVBrightDec_VBV[i])
-            sexaLen = len(sexa) - 1
-            coordArrayRA_VBV.append(sexa[0:12])
-            coordArrayDec_VBV.append(sexa[14:sexaLen])
+            convRA, convDec = decimal_to_sexagesimal(self.UVBrightRA_VBV[i], self.UVBrightDec_VBV[i])
+            coordArrayRA_VBV.append(convRA)
+            coordArrayDec_VBV.append(convDec)
 
         for i in range(0, len(self.UVBrightRA_UBV)):
-            sexa = pyasl.coordsDegToSexa(self.UVBrightRA_UBV[i], self.UVBrightDec_UBV[i])
-            sexaLen = len(sexa) - 1
-            coordArrayRA_UBV.append(sexa[0:12])
-            coordArrayDec_UBV.append(sexa[14:sexaLen])
+            convRA, convDec = decimal_to_sexagesimal(self.UVBrightRA_UBV[i], self.UVBrightDec_UBV[i])
+            coordArrayRA_UBV.append(convRA)
+            coordArrayDec_UBV.append(convDec)
 
         for i in range(0, len(memberRA)):
-            sexa = pyasl.coordsDegToSexa(memberRA[i], memberDec[i])
-            sexaLen = len(sexa) - 1
-            coordArrayRA_Mem.append(sexa[0:12])
-            coordArrayDec_Mem.append(sexa[14:sexaLen])
+            convRA, convDec = decimal_to_sexagesimal(memberRA[i], memberDec[i])
+            coordArrayRA_Mem.append(convRA)
+            coordArrayDec_Mem.append(convDec)
 
         for i in range(0, len(nonMemberRA)):
-            sexa = pyasl.coordsDegToSexa(nonMemberRA[i], nonMemberDec[i])
-            sexaLen = len(sexa) - 1
-            coordArrayRA_NM.append(sexa[0:12])
-            coordArrayDec_NM.append(sexa[14:sexaLen])
+            convRA, convDec = decimal_to_sexagesimal(nonMemberRA[i], nonMemberDec[i])
+            coordArrayRA_NM.append(convRA)
+            coordArrayDec_NM.append(convDec)
 
         self.coordArrayRA_VBV = np.array(coordArrayRA_VBV)
         self.coordArrayDec_VBV = np.array(coordArrayDec_VBV)
@@ -437,7 +432,6 @@ class GCAnalyzer:
         self.coordArrayDec_Mem = np.array(coordArrayDec_Mem)
         self.coordArrayRA_NM = np.array(coordArrayRA_NM)
         self.coordArrayDec_NM = np.array(coordArrayDec_NM)
-
 
     def dataSaver(self):
         indexColumn = self.indAll[self.UVBrightCond_VBV] + 1
@@ -495,11 +489,11 @@ class GCAnalyzer:
 
         np.savetxt(f"clusterMembers/{self.clusterName}_memberStars_{self.extension}.dat", fileArray3,
                    fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i", delimiter="\t",
-                   header=f"{self.clusterName} E(B-V)={self.ebv:.2f}, (m-M)_0 = {self.distModulus:.2f}\nBlueFlag "
-                          f"Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then"
+                   header=f"{self.clusterName} E(B-V)={self.ebv:.2f}, (m-M)_0 = {self.distModulus:.2f}\nBF = BlueFlag "
+                          f"Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then "
                           "BlueFlag = 0. Value of 1 is good.\n"
                           f"File Created: {datetime.now().strftime('%m/%d/%Y')} (MM/DD/YYYY)\n\tRA\t\tDec\t\t("
-                          f"B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag")
+                          f"B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBF")
         print("---->Member stars file saved")
 
         np.savetxt(f"nonMembers/{self.clusterName}_nonMembers_{self.extension}", fileArray5,
@@ -514,20 +508,20 @@ class GCAnalyzer:
         np.savetxt(f"candStars/candStarMasterList/{self.clusterName}_candStarsMaster_{self.extension}.dat",
                    candStarMasterList, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i",
                    delimiter="\t",
-                   header=f"{self.clusterName} E(B-V)={self.ebv:.2f}, (m-M)_0 = {self.distModulus:.2f}\nBlueFlag "
-                          f"Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then"
+                   header=f"{self.clusterName} E(B-V)={self.ebv:.2f}, (m-M)_0 = {self.distModulus:.2f}\nBF = BlueFlag "
+                          f"Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then "
                           "BlueFlag = 0. Value of 1 is good.\n"
                           f"File Created: {datetime.now().strftime('%m/%d/%Y')} (MM/DD/YYYY)\n\tRA\t\tDec\t\t("
-                          "B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag")
+                          "B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBF")
         print("---->Candidate stars file saved")
 
         if os.path.exists(f"candStars/candStarsWithProbs/{self.clusterName}_candStarsWithProb_{self.extension}.dat"):
             print("---->V&B21 Comparison Data Found!")
         else:
-            UVBrightRA = np.unique(np.append(np.array(self.UVBrightRA_VBV), np.array(self.UVBrightRA_UBV)))
-            UVBrightDec = np.unique(np.append(np.array(self.UVBrightDec_VBV), np.array(self.UVBrightDec_UBV)))
+            UVBrightRA = pd.unique(np.append(np.array(self.UVBrightRA_VBV), np.array(self.UVBrightRA_UBV)))
+            UVBrightDec = pd.unique(np.append(np.array(self.UVBrightDec_VBV), np.array(self.UVBrightDec_UBV)))
 
-            UVBright_Coords = list(zip(UVBrightRA, np.unique(UVBrightDec)))
+            UVBright_Coords = list(zip(UVBrightRA, UVBrightDec))
 
             probFinder = Comparer(self.clusterName, UVBright_Coords, self.b[uniqueInd], self.v[uniqueInd])
             self.probList = probFinder.separationFinder()  # Probability of a star being a member from MNRAS, 505, 5978
@@ -536,10 +530,9 @@ class GCAnalyzer:
             UVBrightCoordDec = []
 
             for i in range(0, len(UVBrightRA)):
-                sexa = pyasl.coordsDegToSexa(UVBrightRA[i], UVBrightDec[i])
-                sexaLen = len(sexa) - 1
-                UVBrightCoordRA.append(sexa[0:12])
-                UVBrightCoordDec.append(sexa[14:sexaLen])
+                convRA, convDec = decimal_to_sexagesimal(UVBrightRA[i], UVBrightDec[i])
+                UVBrightCoordRA.append(convRA)
+                UVBrightCoordDec.append(convDec)
 
             self.UVBrightCoordRA = np.array(UVBrightCoordRA)
             self.UVBrightCoordDec = np.array(UVBrightCoordDec)
@@ -555,13 +548,15 @@ class GCAnalyzer:
             np.savetxt(f"candStars/candStarsWithProbs/{self.clusterName}_candStarsWithProb_{self.extension}.dat",
                        fileArray6, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i\t%i",
                        delimiter="\t",
-                       header=f"{self.clusterName} E(B-V)={self.ebv:.2f}, (m-M)_0 = {self.distModulus:.2f}\nBlueFlag "
-                              f"Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then"
-                              "BlueFlag = 0. Value of 1 is good.\nNote: if BaumgardtCheck = 1, then there is atleast "
-                              "1 member star within 3\""
-                              "of the candidate star in the cluster V&B21\n"
+                       header=f"{self.clusterName} E(B-V)={self.ebv:.2f}, (m-M)_0 = {self.distModulus:.2f}\nBF = "
+                              f"BlueFlag "
+                              f"Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then "
+                              "BlueFlag = 0. Value of 1 is good.\nNote: if BC = BaumgardtCheck = 1, then there is "
+                              "at least "
+                              "1 member star within 3\" and a G magnitude within\n"
+                              "0.5 mag of the candidate star in the cluster as per V&B21 (MNRAS, 505, 5978)\n"
                               f"File Created: {datetime.now().strftime('%m/%d/%Y')} (MM/DD/YYYY)\n\tRA\t\tDec\t\t("
-                              "B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBlueFlag\tBaumgardtCheck")
+                              "B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBF\tBC")
             print("---->Candidate stars with probabilities file saved")
 
         print("-->All data files saved")

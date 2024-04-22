@@ -49,3 +49,31 @@ def HB_model(x, a, b, c, d, e, f, g, k):
     # g moves the curve up or down (-ve value moves it up), k moves the graph left or right (+ve moves it blueward)
     x = x+k
     return a*x**6+b*x**5+c*x**4+d*x**3+e*x**2+f*x+g
+
+def decimal_to_sexagesimal(ra, dec):
+    """
+    Convert celestial coordinates (RA, Dec) from decimal to sexagesimal.
+
+    Args:
+    ra_dec (tuple): Tuple containing Right Ascension (RA) and Declination (Dec) in decimal format.
+
+    Returns:
+    ra_sexagesimal (str): RA in sexagesimal format.
+    dec_sexagesimal (str): Dec in sexagesimal format.
+    """
+
+    # Convert RA from decimal to sexagesimal
+    ra_hour = int(ra // 15)
+    ra_minute = int((ra % 15) * 4)
+    ra_second = (((ra % 15) * 4) - ra_minute) * 60
+
+    # Convert Dec from decimal to sexagesimal
+    dec_degree = int(dec)
+    dec_minute = int((dec - dec_degree) * 60)
+    dec_second = (((dec - dec_degree) * 60) - dec_minute) * 60
+
+    # Format sexagesimal strings
+    ra_sexagesimal = f"{ra_hour:02d} {ra_minute:02d} {ra_second:06.3f}"
+    dec_sexagesimal = f"{dec_degree:02d} {abs(dec_minute):02d} {abs(dec_second):05.2f}"
+
+    return ra_sexagesimal, dec_sexagesimal

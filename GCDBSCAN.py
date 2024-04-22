@@ -51,9 +51,9 @@ class GCDBSCAN:
         fig.savefig(f"PMPlots/{self.clusterName}_{self.extension}.pdf", dpi=300, bbox_inches="tight")
 
     def clusters(self):
-        if os.path.exists(f"DBSCANParams/{self.clusterName}_{self.extension}.json"):
+        if os.path.exists(f"DBSCANParams/{self.clusterName}.json"):
             print("-->Saved best DBSCAN parameters found")
-            with open(f"DBSCANParams/{self.clusterName}_{self.extension}.json", "r") as g:
+            with open(f"DBSCANParams/{self.clusterName}.json", "r") as g:
                 DBSCANParams = json.load(g)
                 self.best_epsilon = DBSCANParams['best_epsilon']
                 self.best_min_samples = int(DBSCANParams['best_min_samples'])
@@ -101,7 +101,7 @@ class GCDBSCAN:
             print(f"---->Best DBSCAN parameters found to be eps={self.best_epsilon}, min_pts={self.best_min_samples}, "
                   f"with a silhouette score of {self.best_score}/1")
 
-            with open(f"DBSCANParams/{self.clusterName}_{self.extension}.json", "w") as f:
+            with open(f"DBSCANParams/{self.clusterName}.json", "w") as f:
                 DBSCANParams = {'best_epsilon': self.best_epsilon, 'best_min_samples': float(self.best_min_samples),
                                 'best_score': self.best_score,
                                 'best_labels': list(np.asarray(self.best_labels).astype(float))}

@@ -4,6 +4,10 @@ from astropy.coordinates import SkyCoord
 from scipy.spatial import cKDTree
 import astropy.units as u
 from tqdm import tqdm
+import warnings
+
+# Ignore VisibleDeprecationWarning
+warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 class Comparer:
     def __init__(self, clusterName, candStarCoordinates, bMagnitude, vMagnitude):
