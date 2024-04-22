@@ -47,8 +47,6 @@ class Comparer:
             else:
                 gMagDiff.append(-9.99)
 
-        print(gMagDiff)
-        breakpoint()
         baumgardtChecklist = []
         for i in range(len(probabilityList)):
             if len(probabilityList[i]) > 0 and max(probabilityList[i]) > 0.5 > min(np.array(gMagDiff)[i]):
