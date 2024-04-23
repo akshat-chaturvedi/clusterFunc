@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from astropy.table import Table
 import pandas as pd
 from clusterProps import clusterProperties as CP
-# from GaiaQuerier import GaiaQuerier
+from GaiaQuerier import GaiaQuerier
 from GMagCalculator import GMagFinder
 from GCDBSCAN import GCDBSCAN
 from datetime import datetime
@@ -78,7 +78,7 @@ class GCAnalyzer:
             makeQuery = input("-->Gaia DR3 matches file not found. Make Gaia Archive query for this cluster? [Y/N]")
             if makeQuery in ["Y", "y", ""]:
                 print("-->Gaia DR3 Querying Started")
-                # GaiaQuerier(self.clusterName)
+                GaiaQuerier(self.clusterName)
             else:
                 exit("Analysis Ended")
 
@@ -518,19 +518,21 @@ class GCAnalyzer:
         if os.path.exists(f"candStars/candStarsWithProbs/{self.clusterName}_candStarsWithProb_{self.extension}.dat"):
             print("---->V&B21 Comparison Data Found!")
         else:
-            UVBrightRA = pd.unique(np.append(np.array(self.UVBrightRA_VBV), np.array(self.UVBrightRA_UBV)))
-            UVBrightDec = pd.unique(np.append(np.array(self.UVBrightDec_VBV), np.array(self.UVBrightDec_UBV)))
+            # UVBrightRA = pd.unique(np.append(np.array(self.UVBrightRA_VBV), np.array(self.UVBrightRA_UBV)))
+            # UVBrightDec = pd.unique(np.append(np.array(self.UVBrightDec_VBV), np.array(self.UVBrightDec_UBV)))
 
-            UVBright_Coords = list(zip(UVBrightRA, UVBrightDec))
+            uniqueIndArray = np.unique(np.append(self.indAll[self.UVBrightCond_VBV],
+                                                 self.indAll[self.UVBrightCond_UBV]))
 
+            UVBright_Coords = list(zip(self.ra[uniqueIndArray], self.dec[uniqueIndArray]))
             probFinder = Comparer(self.clusterName, UVBright_Coords, self.b[uniqueInd], self.v[uniqueInd])
             self.probList = probFinder.separationFinder()  # Probability of a star being a member from MNRAS, 505, 5978
 
             UVBrightCoordRA = []
             UVBrightCoordDec = []
 
-            for i in range(0, len(UVBrightRA)):
-                convRA, convDec = decimal_to_sexagesimal(UVBrightRA[i], UVBrightDec[i])
+            for i in range(0, len(self.ra[uniqueIndArray])):
+                convRA, convDec = decimal_to_sexagesimal(self.ra[uniqueIndArray][i], self.dec[uniqueIndArray][i])
                 UVBrightCoordRA.append(convRA)
                 UVBrightCoordDec.append(convDec)
 

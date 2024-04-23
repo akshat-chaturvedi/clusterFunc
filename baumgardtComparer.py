@@ -9,14 +9,19 @@ import warnings
 # Ignore VisibleDeprecationWarning
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
+
 class Comparer:
     def __init__(self, clusterName, candStarCoordinates, bMagnitude, vMagnitude):
         self.clusterName = clusterName
-        self.baumgardtData = pd.read_csv(f"BaumgardtTables/{self.clusterName}.txt", sep="\t",
-                                         header=None)
+        try:
+            self.baumgardtData = pd.read_csv(f"BaumgardtTables/{self.clusterName}.txt", sep="\t",
+                                             header=None)
+        except Exception as e:
+            exit(f"Baumgardt comparison file not found: {e}")
+
         self.b = bMagnitude
         self.v = vMagnitude
-        self.g = self.v - 0.0124*(self.b-self.v)
+        self.g = self.v - 0.0124 * (self.b - self.v)
         baumgardtRA = self.baumgardtData[1]
         baumgardtDec = self.baumgardtData[2]
         self.baumgardtCoords = np.column_stack((baumgardtRA, baumgardtDec))
@@ -50,7 +55,6 @@ class Comparer:
                 gMagDiff.append(abs(self.g[i] - gMagnitudeList[i]))
             else:
                 gMagDiff.append(-9.99)
-
         baumgardtChecklist = []
         for i in range(len(probabilityList)):
             if len(probabilityList[i]) > 0 and max(probabilityList[i]) > 0.5 > min(np.array(gMagDiff)[i]):
@@ -59,4 +63,3 @@ class Comparer:
                 baumgardtChecklist.append(0)
 
         return np.array(baumgardtChecklist)
-
