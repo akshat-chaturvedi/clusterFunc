@@ -191,7 +191,6 @@ class GCAnalyzer:
         indParSiegel = self.indSiegel[parCond]
         self.indAll = np.intersect1d(self.indAll, indParSiegel)  # Get combined index of members
 
-
         # Getting non-members from membership tests (bad photometry rejects are in dataCleaner method)
 
         counter = []  # Initialize list for reason for exclusion from cluster membership
@@ -475,6 +474,7 @@ class GCAnalyzer:
              self.v[self.notInClustSiegel], self.i[self.notInClustSiegel], self.counter])
         fileArray5 = np.array(fileArray5)
 
+        emptyCheck = False
         if len(fileArray2) != 0 and len(fileArray4) != 0:
             candStarMasterList = np.concatenate((fileArray2, fileArray4))
             candStarMasterList = np.unique(candStarMasterList)
@@ -483,7 +483,8 @@ class GCAnalyzer:
         elif len(fileArray2) == 0 and len(fileArray4) != 0:
             candStarMasterList = fileArray4
         else:
-            candStarMasterList = np.array([])
+            candStarMasterList = np.array([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
+            emptyCheck = True
 
         print("-->Saving data files")
 
@@ -505,6 +506,16 @@ class GCAnalyzer:
                           "B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tReason")
         print("---->Non-member stars file saved")
 
+        # if emptyCheck:
+        #     with open(f"candStars/candStarMasterList/{self.clusterName}_candStarsMaster_{self.extension}.dat",
+        #               'w') as file:
+        #         file.write(
+        #             f"{self.clusterName} E(B-V)={self.ebv:.2f}, (m-M)_0 = {self.distModulus:.2f}\n"
+        #             f"BF = BlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0. Value of 1 is good.\n"
+        #             f"File Created: {datetime.now().strftime('%m/%d/%Y')} (MM/DD/YYYY)\n\tRA\t\tDec\t\t("
+        #             f"B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBF"
+        #         )
+        # else:
         np.savetxt(f"candStars/candStarMasterList/{self.clusterName}_candStarsMaster_{self.extension}.dat",
                    candStarMasterList, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i",
                    delimiter="\t",
@@ -520,32 +531,51 @@ class GCAnalyzer:
         else:
             # UVBrightRA = pd.unique(np.append(np.array(self.UVBrightRA_VBV), np.array(self.UVBrightRA_UBV)))
             # UVBrightDec = pd.unique(np.append(np.array(self.UVBrightDec_VBV), np.array(self.UVBrightDec_UBV)))
+            if emptyCheck:
+                # with open(f"candStars/candStarsWithProbs/{self.clusterName}_candStarsWithProb_{self.extension}.dat",
+                #           'w') as file:
+                #     file.write(
+                #         f"{self.clusterName} E(B-V)={self.ebv:.2f}, (m-M)_0 = {self.distModulus:.2f}\n"
+                #         f"BF = BlueFlag Note: if (V-I)0 > 0.331 + 1.444 * (B-V)0 then BlueFlag = 0. Value of 1 is "
+                #         f"good.\n"
+                #         f"Note: if BC = BaumgardtCheck = 1, then there is at least "
+                #         "1 member star within 3\" and a G magnitude within\n"
+                #         "0.5 mag of the candidate star in the cluster as per V&B21 (MNRAS, 505, 5978)\n"
+                #         f"File Created: {datetime.now().strftime('%m/%d/%Y')} (MM/DD/YYYY)\n\tRA\t\tDec\t\t("
+                #         "B-V)_0\tM_u\tM_B\tM_V\tu\tB\tV\tI\tBF\tBC"
+                #     )
+                if os.path.exists(f"BaumgardtTables/{self.clusterName}.txt"):
+                    fileArray6 = np.array([[0.0, 0.0, 0.0, 99.9, 99.9, 99.9, 99.9, 99.9, 99.9, 99.9, 0.0, 0.0, 0.0]])
+                    print("---->No candidate stars found!")
+                else:
+                    exit("No Baumgardt Tables Found!")
+            else:
+                uniqueIndArray = np.unique(np.append(self.indAll[self.UVBrightCond_VBV],
+                                                     self.indAll[self.UVBrightCond_UBV]))
 
-            uniqueIndArray = np.unique(np.append(self.indAll[self.UVBrightCond_VBV],
-                                                 self.indAll[self.UVBrightCond_UBV]))
+                UVBright_Coords = list(zip(self.ra[uniqueIndArray], self.dec[uniqueIndArray]))
+                probFinder = Comparer(self.clusterName, UVBright_Coords, self.b[uniqueInd], self.v[uniqueInd])
+                self.probList = probFinder.separationFinder()  # Probability of a star being a member from MNRAS,
+                # 505, 5978
 
-            UVBright_Coords = list(zip(self.ra[uniqueIndArray], self.dec[uniqueIndArray]))
-            probFinder = Comparer(self.clusterName, UVBright_Coords, self.b[uniqueInd], self.v[uniqueInd])
-            self.probList = probFinder.separationFinder()  # Probability of a star being a member from MNRAS, 505, 5978
+                UVBrightCoordRA = []
+                UVBrightCoordDec = []
 
-            UVBrightCoordRA = []
-            UVBrightCoordDec = []
+                for i in range(0, len(self.ra[uniqueIndArray])):
+                    convRA, convDec = decimal_to_sexagesimal(self.ra[uniqueIndArray][i], self.dec[uniqueIndArray][i])
+                    UVBrightCoordRA.append(convRA)
+                    UVBrightCoordDec.append(convDec)
 
-            for i in range(0, len(self.ra[uniqueIndArray])):
-                convRA, convDec = decimal_to_sexagesimal(self.ra[uniqueIndArray][i], self.dec[uniqueIndArray][i])
-                UVBrightCoordRA.append(convRA)
-                UVBrightCoordDec.append(convDec)
+                self.UVBrightCoordRA = np.array(UVBrightCoordRA)
+                self.UVBrightCoordDec = np.array(UVBrightCoordDec)
 
-            self.UVBrightCoordRA = np.array(UVBrightCoordRA)
-            self.UVBrightCoordDec = np.array(UVBrightCoordDec)
-
-            fileArray6 = np.rec.fromarrays(
-                [indexColumn4, self.UVBrightCoordRA, self.UVBrightCoordDec,
-                 self.dered_bv[uniqueInd], self.dered_u[uniqueInd],
-                 self.dered_b[uniqueInd], self.dered_v[uniqueInd],
-                 self.u[uniqueInd], self.b[uniqueInd],
-                 self.v[uniqueInd], self.i[uniqueInd], self.blueFlagArray[uniqueInd], self.probList])
-            fileArray6 = np.array(fileArray6)
+                fileArray6 = np.rec.fromarrays(
+                    [indexColumn4, self.UVBrightCoordRA, self.UVBrightCoordDec,
+                     self.dered_bv[uniqueInd], self.dered_u[uniqueInd],
+                     self.dered_b[uniqueInd], self.dered_v[uniqueInd],
+                     self.u[uniqueInd], self.b[uniqueInd],
+                     self.v[uniqueInd], self.i[uniqueInd], self.blueFlagArray[uniqueInd], self.probList])
+                fileArray6 = np.array(fileArray6)
 
             np.savetxt(f"candStars/candStarsWithProbs/{self.clusterName}_candStarsWithProb_{self.extension}.dat",
                        fileArray6, fmt="%s\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.4f\t%.4f\t%.4f\t%.4f\t%i\t%i",
