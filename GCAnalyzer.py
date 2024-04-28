@@ -31,7 +31,8 @@ class GCAnalyzer:
             self.extension = datetime.now().strftime('%B')
         else:
             self.extension = input("Enter custom extension: ")
-        print(f"Cluster Analysis Started on {self.clusterName} with extension: {self.extension}")
+        print(f"Cluster Analysis Started on \033[94m{self.clusterName}\033[0m with extension: "
+              f"\033[94m{self.extension}\033[0m")
 
         self.clusterNameFile = f"{self.clusterName}.phot"
         self.clusterGaiaFile = f"NewCoor/{self.clusterName}_new_coor.dat"
@@ -592,5 +593,5 @@ class GCAnalyzer:
             print("---->Candidate stars with probabilities file saved")
 
         print("-->All data files saved")
-        print("Analysis Completed!")
+        print("\033[92mAnalysis Completed!\033[0m")
         logging.info(f'Run successful, cluster: {self.clusterName}, extension: {self.extension}')
