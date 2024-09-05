@@ -271,7 +271,7 @@ class GCAnalyzer:
             ax.scatter(self.bv[self.indAll][self.UVBrightCond_VBV], self.v[self.indAll][self.UVBrightCond_VBV], c='g',
                        s=2)
             ax.set_title(f"{self.clusterName} $E(B-V)$={self.ebv:.2f} $(m-M)_0$={self.distModulus:.2f}", fontsize=16)
-            ax.set_xlim(-0.75, 1.3)
+            ax.set_xlim(-0.75, 2.0)
             ax.set_ylim(21, 11.5)
             ax.set_xlabel('$B-V$', fontsize=14)
             ax.set_ylabel('$V$', fontsize=14)
